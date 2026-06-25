@@ -7,6 +7,28 @@ work, works for someone who isn't me.
 These are showcased at the [Skills Gallery](https://skills.roytown.net). Private,
 in-progress skills live elsewhere and are not published here.
 
+## How a skill here gets showcased (behind the scenes)
+
+This repo is a **source**, not the website. The [Skills Gallery](https://github.com/goggledefogger/skills-gallery)
+reads each skill's **live `SKILL.md`** straight from here at build time — it never stores a copy, so
+the cards can't drift from the real skill.
+
+```
+push a skill to main
+   │  .github/workflows/notify-gallery.yml fires a repository_dispatch at the gallery
+   ▼
+gallery rebuilds live: extract → sanitization firewall (fail-closed) → trust detection → visibility
+   ▼
+deploys to both frontends:
+   • skills.roytown.net        (public — everyone)
+   • skills-admin.roytown.net  (admin — login-gated, also shows in-progress skills)
+```
+
+Skills in **this** repo are the audited, public ones, so they're published to the public frontend.
+In-progress skills live in a private source repo and only appear on the login-gated admin frontend
+until they're promoted. The full pipeline is documented in the gallery's
+[`docs/PUBLISHING.md`](https://github.com/goggledefogger/skills-gallery/blob/main/docs/PUBLISHING.md).
+
 ## Install
 
 ```bash
