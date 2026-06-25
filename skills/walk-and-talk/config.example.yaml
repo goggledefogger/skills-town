@@ -1,0 +1,65 @@
+# walk-and-talk config — written to <vault>/.walk-and-talk/config.yaml
+# `setup-advisor.sh --write-config` generates a first draft; the assistant fills
+# the rest by briefly interviewing you (see references/modes.md, "Self-tailoring").
+# The skill TAILORS ITSELF to your second brain — nothing here is assumed fixed.
+
+# --- your second brain ---
+vault: /path/to/vault              # working copy of your notes (git, if you sync via git)
+second_brain: obsidian             # obsidian | notes | tasks | other (sensed/asked)
+
+# Where walk-time capture + drafts land. For an external app (e.g. Google Tasks)
+# the skill captures LOCALLY first and hands off to your existing loop — it does
+# not reimplement your system.
+capture:
+  target: inbox-file               # inbox-file | daily-note | external
+  path: Inbox/                     # for inbox-file / daily-note (relative to vault)
+  external_note: ""                # e.g. "Google Tasks — I capture locally, you triage in your loop"
+
+# Your existing triage/scheduling loop owns sync + scheduling; the skill feeds it.
+triage:
+  loop: user                       # user | none
+
+# Vault-first schedule / task-fit note read before any calendar. Empty = skip.
+schedule_note: ""
+
+# --- how it should sound (audio-OS feel) ---
+voice:
+  default_mode: passive            # Dan's principle: quiet, capture-only, until told otherwise
+  verbosity: brief                 # brief | normal | detailed
+  confirmations: yes-no            # prefer yes/no + simple choices (hands-free-easy)
+  quiet_when_relaxed: true         # zone-out friendly: stay silent unless reached for
+
+# Mode behavior. See references/modes.md.
+modes:
+  passive: { speak: minimal, capture: true,  interactive: false }   # one-way capture, stay quiet
+  active:  { speak: normal,  capture: true,  interactive: true  }   # walk-and-work
+  quiet:   { speak: off,     capture: true,  interactive: false }   # fully silent (evening)
+
+# Time-of-day / routine -> mode. Format: "HH:MM-HH:MM mode" (24h). First match wins;
+# else voice.default_mode. Location/calendar/explicit-command also switch modes
+# (behavioral). `session.sh mode --resolve` applies these.
+# OFF by default so default_mode holds cleanly. Add your real routine to turn it on.
+# First match wins. e.g.: - "07:00-09:30 passive"  - "14:00-16:00 active"  - "20:00-23:59 quiet"
+mode_triggers: []
+
+# --- interaction + connectivity ---
+navigation:
+  # one physical button for advance/confirm. Default: any Bluetooth headphones/earbuds
+  # (their multifunction button). Other options: ring, clicker, phone tap, keyboard.
+  button: bluetooth-headphones
+
+offline:
+  capture_locally: true            # always capture to disk first; sync later
+  degrade: graceful                # never assume connectivity
+
+# --- transport / engines (see references/transport-default.md) ---
+push_policy: push                  # session-branch push | commit-only
+transport: termius-tailscale-tmux-mosh
+tts: runtime                       # runtime (own/on-device voice) | gemini (Phase 2)
+
+# Per-step engine routing — local models gradual + planned, OFF by default.
+engine:
+  default: cloud
+  # auditory_view: cloud
+  # draft: cloud
+  # transcription: cloud           # non-urgent transcription may route to local Whisper later

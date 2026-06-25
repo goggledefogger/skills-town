@@ -1,0 +1,39 @@
+{
+  "name": "skills-town",
+  "owner": {
+    "name": "goggledefogger"
+  },
+  "metadata": {
+    "description": "Public, audited Agent Skills. Each skill here passed a sanitization + readiness audit before publishing."
+  },
+  "plugins": [
+    {
+      "name": "browser-ai-bridge",
+      "source": "./skills/browser-ai-bridge",
+      "version": "1.0.0",
+      "license": "MIT",
+      "description": "Walk through your app with an AI helper in a real browser you can watch. It reads the live page and actually clicks, types, and edits it (via Playwright) while you talk — not just looking, and not hidden. Use to test your own web app, reproduce a bug, or get guided help walking through a UI."
+    },
+    {
+      "name": "job-search-copilot",
+      "source": "./skills/job-search-copilot",
+      "version": "1.0.0",
+      "license": "MIT",
+      "description": "A careful job-hunt helper. Writes resumes and cover letters in your voice, reads an existing resume, explains every field on an application, and fills forms in the browser for your review — never submitting on its own. Use to prepare job applications, understand a posting's fields, or get guided help filling one out. Bring your own writing and details."
+    },
+    {
+      "name": "playwright-browser-bridge",
+      "source": "./skills/playwright-browser-bridge",
+      "version": "1.0.0",
+      "license": "MIT",
+      "description": "A shared browser helper that other skills build on. It joins a browser you already have open instead of launching a new one, re-checks buttons before clicking, and deletes anything it downloads. Use as the browser layer under skills that read or act on web pages, like job-search-copilot and browser-ai-bridge."
+    },
+    {
+      "name": "walk-and-talk",
+      "source": "./skills/walk-and-talk",
+      "version": "1.0.0",
+      "license": "MIT",
+      "description": "Turn any second brain (Obsidian, notes, a task system) into a voice-first, eyes-free walk-and-talk companion. Two modes: PASSIVE capture (the quiet default — drop ideas into your inbox, stay out of the way) and ACTIVE walk-and-work (draft and get things done by voice). It tailors ITSELF to your setup, habits, and routine rather than shipping one fixed flow, and can switch modes by time of day, routine, or spoken command. Reads briefs aloud (synthesized, never raw markdown), drafts without sending, commits safely. Use to run a walk-and-talk session, set up a hands-free capture/work loop, or point the skill at your own second brain. Runtime-agnostic; includes a self-tailoring setup advisor."
+    }
+  ]
+}
