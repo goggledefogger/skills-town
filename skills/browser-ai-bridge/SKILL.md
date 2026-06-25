@@ -1,6 +1,6 @@
 ---
 name: browser-ai-bridge
-description: "Walk through your app with an AI helper in a real browser you can watch. It reads the live page and actually clicks, types, and edits it (via Playwright) while you talk — not just looking, and not hidden. Use to test your own web app, reproduce a bug, or get guided help walking through a UI."
+description: "Walk through your app with an AI helper in a real browser you can watch. It reads the live page and actually clicks, types, and edits it while you talk — not just looking, and not hidden. Use to test your own web app, reproduce a bug, or get guided help walking through a UI."
 ---
 
 # browser-ai-bridge
