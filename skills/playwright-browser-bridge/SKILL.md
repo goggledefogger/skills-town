@@ -5,54 +5,56 @@ description: "A shared browser helper that other skills build on. It joins a bro
 
 # playwright-browser-bridge
 
-A small, reusable layer that other skills build on to drive a **real browser** through Playwright.
-It exists so that "an agent touches the page" follows the same safe, predictable rules everywhere,
-instead of each skill reinventing session handling and selector hygiene.
+A small set of **rules for driving a real browser** through a Playwright-capable runtime (the
+Playwright MCP server, or any equivalent `browser_*` tools). Other skills build on it so that "an
+agent touches a web page" works the same careful way every time, instead of each skill reinventing
+session handling and getting the risky parts wrong.
 
-This is a **substrate**: it is consumed by `job-search-copilot` (form discovery + guided
-walkthrough) and `browser-ai-bridge` (dogfood/QA). It deliberately does **not** ship a user-facing
-flow of its own.
+This is a **substrate**: `job-search-copilot` (form discovery + guided fill) and `browser-ai-bridge`
+(dogfood/QA) both use it. It ships no user-facing flow of its own — it ships discipline (and one
+small safety helper, `scripts/with-tmp.sh`).
 
-## Core principles
+## The five rules
 
-1. **Attach, don't launch.** Prefer connecting to a browser session the user already has open
-   (`browser_navigate` against the running context). Launch a fresh headless instance only when no
-   session exists and the caller explicitly asks for it. The user keeps control of the window.
-2. **Navigate in place.** Reuse the current tab/page rather than spawning new ones, so the user's
-   context (logins, scroll, open forms) is preserved.
-3. **Selectors are drift-prone.** Treat any selector as stale until re-verified against a fresh
-   snapshot. Re-snapshot before acting; never act on a remembered element reference from an earlier
-   page state. When a selector misses, refresh and re-derive — don't retry blindly.
-4. **Read before you write.** Use `browser_snapshot` / `browser_evaluate` to read DOM, console,
-   network, and computed layout first. Measure with `getBoundingClientRect()` + computed styles —
-   don't eyeball pixel positions.
-5. **Data-lifecycle discipline (hard rule).** Anything the browser downloads or exports goes to a
-   temporary directory, is parsed there, and is **deleted** when done. Never write fetched page data
-   or downloads into the repo, and never commit it. Aggregate/transform in memory where possible.
+1. **Attach, don't launch.** Prefer a browser the user already has open. Navigate the current
+   context rather than spawning a fresh, logged-out instance. Launch a new one only when none exists
+   and the caller explicitly asks. The user keeps the window and stays in control. → `references/session.md`
+2. **Navigate in place.** Reuse the current tab so logins, scroll position, and open forms survive.
+3. **Read before you write.** `browser_snapshot` for structure and an actionable element map;
+   `browser_evaluate` for precise reads (text, attributes, `getBoundingClientRect()`, computed
+   styles, console, network). Measure — don't eyeball. → `references/reads.md`
+4. **Selectors are drift-prone.** Re-derive every target from a *current* snapshot immediately before
+   acting. Never act on an element reference remembered from an earlier page state; if a selector
+   misses, re-snapshot and re-derive instead of retrying blindly. → `references/selectors.md`
+5. **Data lifecycle (hard rule).** Anything downloaded or exported goes to a temp dir, is parsed
+   there, and is **deleted** when done — never written into the repo, never committed. Use
+   `scripts/with-tmp.sh` to get a self-cleaning temp dir. → `references/data-lifecycle.md`
 
-## Read patterns
+## Acting (for skills that write)
 
-- **Snapshot** for structure and an actionable element map (the basis for any click/type).
-- **Evaluate** for precise reads: text content, attribute values, `getBoundingClientRect()`,
-  `getComputedStyle()`, console/network state.
-- Re-snapshot after every navigation or DOM mutation; cache nothing across page transitions.
+When a consuming skill clicks / types / selects / navigates:
 
-## Acting (for consumers that write)
+- Re-derive the target from a **fresh** snapshot right before acting.
+- One action at a time on dynamic pages; re-read state between actions.
+- Surface what's about to happen to the caller. The caller decides whether confirmation is required
+  (e.g. `job-search-copilot` demands explicit human confirmation before any submit).
 
-When a consuming skill performs actions (click/type/select/navigate), this layer requires:
+## Quick reference: the tool calls
 
-- Re-derive the target from a **current** snapshot immediately before acting.
-- One action at a time, re-reading state between actions on dynamic pages.
-- Surface what is about to happen to the caller; the caller decides whether confirmation is needed
-  (e.g. `job-search-copilot` requires explicit human confirmation before any submit).
-
-## Compatibility
-
-Requires a Playwright-capable runtime (e.g. the Playwright MCP server, or an equivalent browser
-driver). Tool-agnostic in spirit, but the browser-driving capability narrows where it runs — declare
-it so the gallery's "works on" badge reflects the dependency.
+| Need | Call |
+|---|---|
+| Go to a page (in place) | `browser_navigate(url)` |
+| Get an actionable element map | `browser_snapshot()` |
+| Read exact text / rect / styles | `browser_evaluate(fn)` |
+| Click / type a fresh target | `browser_click(ref)` / `browser_type(ref, text)` — ref from the latest snapshot |
+| Self-cleaning scratch dir | `bash scripts/with-tmp.sh -- <your command>` |
 
 ## What this is NOT
 
-Not a scraper, not a credential harvester, not a headless bot for mass automation. It is a careful,
+Not a scraper, not a credential harvester, not a headless bot for mass automation. It's a careful,
 session-respecting bridge for an agent working **alongside** a human on a real page.
+
+## Compatibility
+
+Requires a Playwright-capable runtime (Playwright MCP or equivalent). That dependency narrows where
+it runs — declare it so a gallery's "works on" badge reflects it.

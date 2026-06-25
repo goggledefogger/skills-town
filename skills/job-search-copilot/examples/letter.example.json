@@ -1,0 +1,14 @@
+{
+  "name": "Jordan Rivera",
+  "contact": {"email": "jordan@example.com", "location": "Portland, OR"},
+  "date": "2026-06-24",
+  "recipient": "Hiring Team",
+  "company": "Northwind",
+  "role": "Senior Backend Engineer",
+  "body": [
+    "I read that Northwind is rebuilding its billing pipeline, and that's the exact problem I spent the last two years on at Acme — moving a nightly batch that kept missing its window onto a streaming reconciliation job that now closes the books by 6am.",
+    "What I'd bring is less about tools and more about temperament: I like the unglamorous work of making a flaky system boring. At Acme I cut p95 latency 40% by rewriting the query layer, but the part I'm proud of is that nobody pages about it anymore.",
+    "I'd welcome the chance to talk about where your pipeline hurts and whether I can help."
+  ],
+  "signoff": "Best"
+}

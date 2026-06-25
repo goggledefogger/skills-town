@@ -5,46 +5,54 @@ description: "Walk through your app with an AI helper in a real browser you can 
 
 # browser-ai-bridge
 
-Dogfood your own app *with* an AI co-pilot in a **real, visible browser**. You narrate what you want
-changed or checked; it reads the live page back to you and acts on it — for real — through Playwright.
-It both **observes** (DOM/console/error/network) and **acts** (click/type/navigate/mutate). Built on
-the shared `playwright-browser-bridge`.
+Dogfood your own app **with** an AI co-pilot in a real, visible browser. You narrate what to check or
+change; it reads the live page back to you and acts on it — for real — through a Playwright runtime.
+It both **observes** (DOM / console / network / layout) and **acts** (click / type / navigate / edit),
+and it stays honest about what's actually a bug versus what was already broken.
 
-## What makes it different
+Built on `playwright-browser-bridge` — so it inherits attach-don't-launch, re-snapshot-before-acting,
+and the download→temp→delete discipline.
 
-- **Head-full, not headless.** It targets a browser **you can see**, attaching to your existing
-  session rather than launching a hidden one, so you watch every action and stay in the loop.
-- **It acts, not just reports.** Beyond reading state, it clicks, types, navigates, and edits the DOM
-  on your narration — then reads back the result.
+## What makes it useful (not just a screenshot bot)
+
+- **Head-full, watched.** It works in a browser you can see, attaching to your session rather than a
+  hidden one. You watch every click.
+- **It acts, then re-reads.** Beyond reading state, it clicks/types/edits on your narration and reads
+  back the result.
 
 ## The dogfood loop
 
-1. **Narrate** the change or check you want ("the submit button looks misaligned on mobile").
-2. **Read** the live state — snapshot the DOM, pull console/network, measure with
-   `getBoundingClientRect()` + computed styles at real viewport sizes (e.g. 1200px desktop and a
-   ~390px phone width). Measure, don't eyeball.
-3. **Find the real source.** Locate the actual file/component behind the UI suggestion before
-   proposing a change. Grep siblings for the same pattern; check whether the data is real or a
-   fixture.
-4. **Triage honestly.** Separate genuine regressions from pre-existing failures and from fixture
-   artifacts. "Verified — no change needed" is a valid, useful outcome.
-5. **Act** (when asked) through the bridge — one action at a time, re-reading state between actions.
-6. **Decide stopgap vs durable** and say which a change is.
+1. **Narrate** the check or change ("the submit button looks off on mobile").
+2. **Read the live state** — snapshot the DOM, pull console/network, and **measure** with
+   `scripts/measure.js` at real viewport sizes (desktop ~1280px and phone ~390px). Measure, don't
+   eyeball.
+3. **Find the real source** — locate the actual file/component behind the UI before proposing a
+   change. Grep siblings for the same pattern; check whether the data is real or a fixture.
+   → `references/tracking.md`
+4. **Triage honestly** — separate a true regression from a pre-existing failure and from a fixture
+   artifact. "Verified — no change needed" is a real, useful outcome. → `references/verification.md`
+5. **Act** (when asked) through the bridge — one action at a time, re-reading between actions.
+6. **Say stopgap vs durable** — be explicit about which kind of fix a change is.
 
-## Verification discipline
+## Measuring (the honest part)
 
-- Test at concrete viewport sizes, not "looks fine."
-- Attribute failures: is this new, or was it already broken? Don't claim a fix for something you
-  didn't change.
-- Prefer measured evidence (rects, computed styles, console output) over impressions.
+Use `scripts/measure.js` with `browser_evaluate` to get an element's real box and computed styles at
+the current viewport, instead of guessing from a screenshot:
+
+```
+browser_evaluate( <contents of scripts/measure.js>, { selector: 'button[type=submit]' } )
+→ { found, rect:{x,y,width,height}, styles:{...}, viewport:{w,h}, offscreen }
+```
+
+Resize the viewport (e.g. 390×844 for phone), re-measure, and compare. Numbers settle arguments that
+screenshots start.
 
 ## Boundaries
 
-- Works alongside you on your own app — not a headless crawler or mass-automation bot.
-- Browser access goes through `playwright-browser-bridge`: attach-don't-launch, navigate in place,
-  re-snapshot before acting, and the download→temp→delete data discipline.
+- Works alongside you on **your own** app — not a headless crawler or mass-automation bot.
+- Browser access goes through `playwright-browser-bridge` (attach, re-check, temp-delete).
 
 ## Compatibility
 
-Depends on a Playwright-capable runtime (via `playwright-browser-bridge`) and a real browser — which
-narrows where it runs; declare the dependency so the "works on" badge reflects it.
+Needs a Playwright-capable runtime and a real browser (via `playwright-browser-bridge`) — which
+narrows where it runs; declare the dependency so a "works on" badge reflects it.

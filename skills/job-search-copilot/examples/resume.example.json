@@ -1,0 +1,16 @@
+{
+  "name": "Jordan Rivera",
+  "headline": "Backend Engineer",
+  "contact": {"email": "jordan@example.com", "location": "Portland, OR",
+              "links": {"GitHub": "https://github.com/jordan"}},
+  "summary": "Backend engineer focused on reliable data pipelines and clean APIs.",
+  "experience": [
+    {"title": "Senior Engineer", "company": "Northwind", "start": "2021-03", "end": "present",
+     "location": "Remote", "bullets": ["Cut p95 latency 40% by reworking the query layer.",
+                                       "Led migration of 12 services to typed contracts."]},
+    {"title": "Engineer", "company": "Acme", "start": "2018-06", "end": "2021-02",
+     "bullets": ["Built the billing reconciliation job processing 2M rows/day."]}
+  ],
+  "education": [{"degree": "B.S. Computer Science", "school": "Portland State", "start": "2014", "end": "2018"}],
+  "skills": ["Python", "PostgreSQL", "Go", "AWS"]
+}
