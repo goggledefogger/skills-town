@@ -4,7 +4,7 @@ Public, audited Agent Skills you can install across tools. Every skill here pass
 sanitization + readiness audit before it was published — no personal data, no half-finished
 work, works for someone who isn't me.
 
-These are showcased at the [Skills Gallery](https://skills-gallery-bb2.pages.dev). Private,
+These are showcased at the [Skills Gallery](https://skills.roytown.net). Private,
 in-progress skills live elsewhere and are not published here.
 
 ## Install
