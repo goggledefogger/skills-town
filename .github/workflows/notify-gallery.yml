@@ -1,0 +1,27 @@
+name: Notify skills-gallery
+
+# When a skill here changes, ping the gallery to rebuild so it never lags this source.
+# Dormant until GALLERY_DISPATCH_TOKEN (a GitHub token that can dispatch to skills-gallery) is set.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger gallery rebuild
+        env:
+          TOKEN: ${{ secrets.GALLERY_DISPATCH_TOKEN }}
+        run: |
+          if [ -z "$TOKEN" ]; then
+            echo "::warning::GALLERY_DISPATCH_TOKEN not set — skipping. Add it to auto-refresh the gallery."
+            exit 0
+          fi
+          curl -fsS -X POST \
+            -H "Authorization: Bearer $TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/goggledefogger/skills-gallery/dispatches \
+            -d '{"event_type":"source-updated"}'
+          echo "dispatched source-updated → skills-gallery"
