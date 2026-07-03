@@ -1,6 +1,6 @@
 ---
 name: walk-and-talk
-description: "Turn any second brain (Obsidian, notes, a task system) into a voice-first, eyes-free walk-and-talk companion. Two modes: PASSIVE capture (the quiet default — drop ideas into your inbox, stay out of the way) and ACTIVE walk-and-work (draft and get things done by voice). It tailors ITSELF to your setup, habits, and routine rather than shipping one fixed flow, and can switch modes by time of day, routine, or spoken command. Reads briefs aloud (synthesized, never raw markdown), drafts without sending, commits safely. Use to run a walk-and-talk session, set up a hands-free capture/work loop, or point the skill at your own second brain. Runtime-agnostic; includes a self-tailoring setup advisor."
+description: "Turn any second brain (Obsidian, notes, a task system) into a voice-first, eyes-free walk-and-talk companion. Two modes: PASSIVE capture (the quiet default — drop ideas into your inbox, stay out of the way) and ACTIVE walk-and-work (draft and get things done by voice). It tailors ITSELF to your setup, habits, and routine rather than shipping one fixed flow, and can switch modes by time of day, routine, or spoken command. Reads briefs aloud (synthesized, never raw markdown), drafts without sending, commits safely. Use to run a walk-and-talk session, set up a hands-free capture/work loop, triage a capture pile into vault commitments, or point the skill at your own second brain. Runtime-agnostic; includes a self-tailoring setup advisor."
 ---
 
 # walk-and-talk
@@ -40,7 +40,7 @@ It reports what's present (OS, vault, git remote, voice runtimes, API keys, loca
 Do **not** assume a fixed structure. The advisor senses what it can (second brain type, an inbox/daily-note dir); you fill the rest with a **brief, yes/no-friendly interview**, then refine the config. Ask only what you can't sense, one light question at a time:
 
 1. **Where should capture land?** (the sensed `capture.path`, the daily note, or an external app like Google Tasks — for external, you capture locally and hand off to their loop).
-2. **Who owns triage/scheduling?** (almost always their existing loop — confirm).
+2. **Who owns triage/scheduling?** Almost always their existing loop — confirm (`triage.loop: user`). If there isn't one, offer agent-guided triage instead of letting the inbox pile up ungoverned (`triage.loop: agent`; see `references/triage.md`).
 3. **How much do you want to hear, and when?** → sets `voice.verbosity` and the `mode_triggers` (e.g. capture-only commute, active afternoon, quiet evening).
 4. **Default mode?** Default to **passive** unless they say otherwise.
 
@@ -59,6 +59,10 @@ Help the user decide and get connected — don't assume the earbuds are sorted:
 ## Runtime state
 
 All runtime state lives in **`<vault>/.walk-and-talk/`** and is **kept out of git** (never synced): `config.yaml`, `state.json` (voice-mode flag, mode, session branch), `queue/` (capture-before-network jobs), `audio/` + `transcripts/`. For a git vault the advisor excludes it via **`.git/info/exclude`** (local, untracked) so setup never dirties your tracked `.gitignore`; for a non-git vault it falls back to `.gitignore`.
+
+## Triage — turning a capture pile into commitments
+
+Capture and commitment are different jobs. Whatever lands in the inbox during a walk is raw and untriaged — it does **not** belong in the vault's real task/priority files until it's been through triage, or "current priorities" turns into the same anxiety-pile the inbox was. If `triage.loop: user`, that's someone else's job (their existing system) and this skill stays out of it. If `triage.loop: agent` — no separate loop exists — the assistant runs that reconciliation itself: see `references/triage.md` for the loop (bucket, align to the vault's projects, recommend what fits/batches/defers, ask batched clarifying questions, write back, remember stable resolutions). This is normally a desk/text session done weekly or on demand, not part of a walk.
 
 ## Running a session
 
@@ -81,7 +85,7 @@ Then **read `references/voice-mode-contract.md` and follow it for every turn** u
 
 **1.5 Make sure I can hear you — before the conversation.** Opening the Voice Control settings is **not** the same as it being ON (the toggle may still be off — this is the #1 thing that silently breaks a session). So before you give the spoken brief and wait for a reply, do one plain check: *"Turn Voice Control on in the window I opened, then say 'open Notes' — tell me when it opens."* Wait until that works before starting the back-and-forth. If you speak and hear nothing back, **assume Voice Control is still off and ask them to turn it on** — don't keep talking into silence. (If the user is clearly typing replies at the desk, you can skip this.)
 
-**2. Brief (vault-first, synthesized).** Offer a short spoken menu of what's waiting (briefs, todos, drafts). Anything from email or other apps should be brought into the vault **before** the walk so it's there in a dead zone — see `references/getting-info-in.md` (copy/paste-and-ingest is the reliable default; live mailbox MCP only when the *right* account is actually connected — verify it). Read the vault-first schedule/task-fit note named in `config.yaml` (`schedule_note`) before considering anything else — if it's empty, just proceed; do **not** reach for a calendar API (v1 has none). Never read a note raw — pipe it through `auditory-view` first, then summarize what comes back:
+**2. Brief (vault-first, synthesized).** Read the vault silently first, then **lead with a proposed plan for the day** — not a menu of open items or a status dump. "Here's what I think today looks like — lock it or steer me" beats "what do you want to do today," which just hands the planning load back to the user. Anything from email or other apps should be brought into the vault **before** the walk so it's there in a dead zone — see `references/getting-info-in.md` (copy/paste-and-ingest is the reliable default; an automated sync tool if the user has one; live mailbox MCP only when the *right* account is actually connected — verify it). Read the vault-first schedule/task-fit note named in `config.yaml` (`schedule_note`, which may itself be a compiled sync file — see `references/getting-info-in.md`) before considering anything else — if it's empty, just proceed; this skill never calls a calendar API directly. Never read a note raw — pipe it through `auditory-view` first, then summarize what comes back:
 
 ```
 bash ${CLAUDE_SKILL_DIR}/scripts/auditory-view/run.sh < <vault>/Path/To/Note.md

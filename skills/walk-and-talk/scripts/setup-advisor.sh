@@ -195,7 +195,12 @@ capture:
   external_note: ""
 triage:
   loop: user
+  preferences_note: ""
 schedule_note: "$DAILY_HINT"         # sensed daily-note dir, if any; confirm/point at your real note
+sync:
+  tool: ""
+  compiled_paths: []
+  refresh: if-stale
 voice:
   default_mode: passive              # quiet, capture-only, until you opt into more
   verbosity: brief

@@ -33,7 +33,7 @@
       "source": "./skills/walk-and-talk",
       "version": "1.0.0",
       "license": "MIT",
-      "description": "Turn any second brain (Obsidian, notes, a task system) into a voice-first, eyes-free walk-and-talk companion. Two modes: PASSIVE capture (the quiet default — drop ideas into your inbox, stay out of the way) and ACTIVE walk-and-work (draft and get things done by voice). It tailors ITSELF to your setup, habits, and routine rather than shipping one fixed flow, and can switch modes by time of day, routine, or spoken command. Reads briefs aloud (synthesized, never raw markdown), drafts without sending, commits safely. Use to run a walk-and-talk session, set up a hands-free capture/work loop, or point the skill at your own second brain. Runtime-agnostic; includes a self-tailoring setup advisor."
+      "description": "Turn any second brain (Obsidian, notes, a task system) into a voice-first, eyes-free walk-and-talk companion. Two modes: PASSIVE capture (the quiet default — drop ideas into your inbox, stay out of the way) and ACTIVE walk-and-work (draft and get things done by voice). It tailors ITSELF to your setup, habits, and routine rather than shipping one fixed flow, and can switch modes by time of day, routine, or spoken command. Reads briefs aloud (synthesized, never raw markdown), drafts without sending, commits safely. Use to run a walk-and-talk session, set up a hands-free capture/work loop, triage a capture pile into vault commitments, or point the skill at your own second brain. Runtime-agnostic; includes a self-tailoring setup advisor."
     }
   ]
 }

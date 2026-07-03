@@ -37,7 +37,7 @@ When pointed at a second brain, the skill must **not assume a fixed structure**.
 
 - **What the second brain is** — Obsidian vault, plain notes, a task system.
 - **Where capture lands** — an inbox file, the daily note, or an external task app (e.g. Google Tasks). For external targets the skill captures **locally first** and hands off to the user's existing triage/scheduling loop — it does not reimplement their system.
-- **Their existing triage/schedule loop** — who owns sync and scheduling (usually the user's setup; the skill feeds it, doesn't replace it).
+- **Their existing triage/schedule loop** — who owns sync and scheduling. Usually the user's own setup (the skill feeds it, doesn't replace it); if there isn't one, offer agent-guided triage sessions instead (`triage.loop: agent`; see `references/triage.md`).
 - **Device + connectivity + walk/commute context.**
 - **What they want and how much to hear** — passive, active, or both, and when each kicks in.
 

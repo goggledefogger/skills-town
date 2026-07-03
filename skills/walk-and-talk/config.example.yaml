@@ -15,12 +15,27 @@ capture:
   path: Inbox/                     # for inbox-file / daily-note (relative to vault)
   external_note: ""                # e.g. "Google Tasks — I capture locally, you triage in your loop"
 
-# Your existing triage/scheduling loop owns sync + scheduling; the skill feeds it.
+# Who reconciles the capture pile into real vault commitments.
+#   user  = your own existing loop owns it; this skill only feeds it (default)
+#   agent = no separate loop — the assistant runs agent-guided triage sessions
+#           against the capture inbox (see references/triage.md)
+#   none  = nothing triages it (rare; capture piles up on purpose)
 triage:
-  loop: user                       # user | none
+  loop: user                       # user | agent | none
+  preferences_note: ""             # vault note where learned triage rules accumulate (agent mode)
 
 # Vault-first schedule / task-fit note read before any calendar. Empty = skip.
+# May itself be a compiled sync file (see `sync:` below and
+# references/getting-info-in.md) — this skill never calls a calendar API directly.
 schedule_note: ""
+
+# Optional: an external sync tool (yours, not shipped by this skill) that pulls
+# calendar/tasks/etc. into compiled, read-only vault files on its own schedule.
+# See references/getting-info-in.md ("automated sync"). Empty = none configured.
+sync:
+  tool: ""                         # e.g. "npm run sync" — regenerates compiled_paths
+  compiled_paths: []               # e.g. ["tasks/inbox/", "calendar-inbox/"]
+  refresh: if-stale                # if-stale | manual — never a fixed schedule
 
 # --- how it should sound (audio-OS feel) ---
 voice:
