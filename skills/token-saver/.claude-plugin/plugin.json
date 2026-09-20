@@ -1,0 +1,9 @@
+{
+  "name": "token-saver",
+  "description": "Cuts token spend with three rules: read passages not files, count every call in the job, never retry a usage-limit failure. Use when a session gets expensive or before adopting an efficiency skill.",
+  "author": {
+    "name": "goggledefogger"
+  },
+  "license": "MIT",
+  "version": "1.7.3"
+}
