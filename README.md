@@ -46,6 +46,7 @@ Or add as a Claude Code plugin marketplace:
 | Skill | What it does |
 |---|---|
 | [job-search-copilot](skills/job-search-copilot/) | A careful job-hunt helper — drafts in your voice, explains every application field, fills forms for your review (never submits on its own). |
+| [token-saver](skills/token-saver/) | Cut token spend with three reading rules and get a report card at the end: a grade, the tokens saved, and whether saving them cost you anything. Turn it on when a session gets expensive. |
 | [walk-and-talk](skills/walk-and-talk/) | Work on any project by voice while you walk — hands-free capture or real work, nothing sent without you. |
 | [browser-ai-bridge](skills/browser-ai-bridge/) | Walk through your app with an AI helper in a real browser it can read and act on while you talk. |
 | [playwright-browser-bridge](skills/playwright-browser-bridge/) | The shared browser layer the two browser skills build on — careful by default. |

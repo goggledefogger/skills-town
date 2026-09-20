@@ -29,6 +29,13 @@
       "description": "A shared browser helper that other skills build on. It joins a browser you already have open instead of launching a new one, re-checks buttons before clicking, and deletes anything it downloads. Use as the browser layer under skills that read or act on web pages, like job-search-copilot and browser-ai-bridge."
     },
     {
+      "name": "token-saver",
+      "source": "./skills/token-saver",
+      "version": "1.7.3",
+      "license": "MIT",
+      "description": "Cuts token spend with three rules: read passages not files, count every call in the job, never retry a usage-limit failure. Use when a session gets expensive or before adopting an efficiency skill."
+    },
+    {
       "name": "walk-and-talk",
       "source": "./skills/walk-and-talk",
       "version": "1.0.0",
