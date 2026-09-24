@@ -31,7 +31,7 @@
     {
       "name": "token-saver",
       "source": "./skills/token-saver",
-      "version": "1.7.3",
+      "version": "1.7.4",
       "license": "MIT",
       "description": "Cuts token spend with three rules: read passages not files, count every call in the job, never retry a usage-limit failure. Use when a session gets expensive or before adopting an efficiency skill."
     },

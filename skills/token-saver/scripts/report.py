@@ -95,7 +95,9 @@ def summarize(ledger: dict) -> dict:
         risk, why = "UNSCORED", "skill was not used this session"
     elif harmed:
         risk, why = "HARM", f"{len(incidents)} incident(s) recorded"
-    elif not reads and not calls:
+    # A missing read ratio leaves efficiency ungraded, not safety: recorded
+    # corrections and incidents are facts, and dropping them hides a slip
+    elif not reads and not calls and not (incidents or corrections or retries):
         risk, why = "UNSCORED", "ledger recorded no reads and no calls"
     elif incidents or corrections or retries:
         bits = []
@@ -179,14 +181,14 @@ def render(s: dict) -> str:
     else:
         rough = (e["bytes_read"] or 0) // BYTES_PER_TOKEN + (e["tool_output_tokens_estimated"] or 0)
         spent_line = (
-            f"~{rough:,} tokens went through the session (rough estimate; exact counts not reported)"
+            f"~{rough:,} tokens of recorded reading and command output (rough estimate; model token counts not reported)"
             if rough
             else "unknown — nothing recorded"
         )
 
     safety_words = {
         "CLEAN": "clean — no corners cut, nothing went wrong",
-        "CORRECTION": f"ok — {r['why']}, caught and fixed before it reached you",
+        "CORRECTION": f"ok — {r['why']}, caught and corrected",
         "HARM": f"PROBLEM — {r['why']}",
         "UNSCORED": "unknown — the skill wasn't used or nothing was recorded",
     }
@@ -280,6 +282,15 @@ def selftest() -> int:
     assert s["efficiency"]["tool_output_tokens_estimated"] == 13000, s
     card = render(s)
     assert "13,000" in card and "command output" in card, card
+
+    # recorded corrections and a low incident keep their safety state even with no
+    # read ratio (found live 2026-09-24: the card said "nothing was recorded" over both)
+    s = summarize({"used": True, "corrections": 2, "tool_output_bytes": 160000,
+                   "incidents": [{"severity": "low", "note": "stale count, corrected"}]})
+    assert s["risk"]["state"] == "CORRECTION" and s["efficiency"]["grade"] == "UNSCORED", s
+    assert "wasn't used" not in render(s), render(s)
+    s = summarize({"used": True, "incidents": [{"severity": "harm", "note": "x"}]})
+    assert s["risk"]["state"] == "HARM", s
 
     # render never crashes and never lets UNSCORED read as a pass
     for ledger in ({}, {"used": True, "reads": [{"bytes_read": 500, "bytes_total": 40000}]},
