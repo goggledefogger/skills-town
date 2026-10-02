@@ -41,6 +41,35 @@ Start a helper with the Agent tool and set its `model` to the row above. When un
 - Run independent helpers at the same time
 - Helpers cannot start helpers of their own, so all handing off happens here
 
+## Show the crew
+
+The user should always be able to see who is working. A helper's work happens out of sight, so a chat that hands off without saying so looks idle. Each model has a badge, and you use it every time:
+
+| Badge | Who |
+|---|---|
+| 🟢 **Haiku** | fast and cheapest: search, read, sweep |
+| 🔵 **Sonnet** | mid-price: build what is decided |
+| 🟣 **Opus** | strong: hard parts and review |
+| 🧭 **Orchestrator** | you: planning, deciding, checking |
+
+**Before you start helpers**, in the same reply as the Agent calls, put a dispatch card first: a blockquote headed with how many helpers and whether they run side by side or one after another, then one line per helper with its badge, its job in a few words, and your time estimate. Then one plain line on why these models: what you saved by not doing it all yourself.
+
+> 🚀 **Sending out 2 helpers, side by side**
+> 🟣 **Opus** · review PR 591, question its premise · ~10m
+> 🔵 **Sonnet** · review the docs PR · ~6m
+
+Opus where the judgment is hard, Sonnet for the docs-only one. Neither needs my model.
+
+**When a helper comes back**, open your next words with one line in the same style, so the result has a name on it:
+
+> ✅ 🟣 **Opus** · PR 591 reviewed · 3 issues, 1 blocking
+
+If a helper fell short and you step up a model or redo it yourself, say so the same way: `↗️ 🔵 Sonnet → 🟣 Opus · first pass missed the race`. Never hide a retry.
+
+**When you do it yourself** because a helper is not worth it, one short line is enough: `🧭 **Orchestrator** · small edit, faster myself`. Not for every sentence of conversation, only for real work you chose to keep.
+
+Keep the cards to these lines. No extra decoration, no card for a single quick read you do yourself.
+
 ## Keep it simple
 
 - A one-line answer, a quick question, or a small edit you can see whole: do it yourself. Starting a helper costs more than a small job
@@ -49,7 +78,7 @@ Start a helper with the Agent tool and set its `model` to the row above. When un
 
 ## Report
 
-When asked for a report (`/orchestrator report`), or at the end of the session, list in plain words what each helper did and on which model, and anything you did yourself because handing it off was not worth it.
+When asked for a report (`/orchestrator report`), or at the end of the session, list in plain words what each helper did and on which model, and anything you did yourself because handing it off was not worth it. Make it a table with a row per helper: its badge, what it did, and how it went. Put your own work in the last row under 🧭 **Orchestrator**. End with one line counting the helpers per model, like `🟢 ×3 · 🔵 ×2 · 🟣 ×1`.
 
 ## Handoff
 
