@@ -1,0 +1,9 @@
+{
+  "name": "firecrawl-search",
+  "description": "Make Firecrawl the web search for a chat, and get set up with it: no-account trial, free key, or sign-in, plus what the free credits cover and what to do when they run out.",
+  "author": {
+    "name": "goggledefogger"
+  },
+  "license": "MIT",
+  "version": "1.0.0"
+}
