@@ -15,6 +15,13 @@
       "description": "Walk through your app with an AI helper in a real browser you can watch. It reads the live page and actually clicks, types, and edits it while you talk — not just looking, and not hidden. Use to test your own web app, reproduce a bug, or get guided help walking through a UI."
     },
     {
+      "name": "firecrawl-search",
+      "source": "./skills/firecrawl-search",
+      "version": "1.0.0",
+      "license": "MIT",
+      "description": "Make Firecrawl the web search for a chat, and get set up with it: no-account trial, free key, or sign-in, plus what the free credits cover and what to do when they run out."
+    },
+    {
       "name": "job-search-copilot",
       "source": "./skills/job-search-copilot",
       "version": "1.0.0",
