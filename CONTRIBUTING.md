@@ -26,6 +26,26 @@ personal data, no half-finished work, works for someone who isn't the author.
    the skill appears on [skills.roytown.net](https://skills.roytown.net) automatically — no manual
    publish step. (How that works: the gallery README → "How a skill here gets showcased".)
 
+## Update a skill
+
+The version string is the release. Claude Code only offers an update when the version changes, so a
+merged fix with the same version never reaches anyone.
+
+1. Bump `version` in `skills/<skill-id>/.claude-plugin/plugin.json`, and set the skill's entry in
+   `.claude-plugin/marketplace.json` to the same number. Do it in the same PR as the change. When both
+   files set a version, Claude Code uses the `plugin.json` one.
+2. Run `node scripts/check-versions.mjs` before you push. It fails if the two numbers differ, or if a
+   skill's files changed and its version did not. The `Version check` workflow runs it on every PR.
+   `node scripts/check-versions.mjs --self-test` checks the script itself.
+
+What people see after the bump on Claude Code: if they turned on auto-update for this marketplace, new
+chats load the new version. Otherwise they run `claude plugin marketplace update skills-town`, then
+`claude plugin update <skill-id>@skills-town`. `claude plugin list` shows the version they have. On other
+agents, `npx skills update` pulls the latest.
+
+Keep command file names and any phrase a launcher or button types the same across updates. Things
+outside this repo point at them.
+
 ## The audit gate
 
 A skill is only published here once it passes **all** of:
