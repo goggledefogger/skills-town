@@ -1,5 +1,5 @@
 ---
-description: Run the orchestrator skill, optionally starting from a handoff
+description: Run the conductor skill, optionally starting from a handoff
 argument-hint: "[report | handoff | a handoff from an earlier chat]"
 ---
 

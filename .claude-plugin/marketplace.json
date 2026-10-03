@@ -29,9 +29,9 @@
       "description": "A careful job-hunt helper. Writes resumes and cover letters in your voice, explains every field on an application, and fills forms in the browser for your review — never submitting on its own. Use to prepare job applications, understand a posting's fields, or get guided help filling one out. Bring your own writing and details."
     },
     {
-      "name": "orchestrator",
-      "source": "./skills/orchestrator",
-      "version": "1.0.2",
+      "name": "conductor",
+      "source": "./skills/conductor",
+      "version": "1.0.3",
       "license": "MIT",
       "description": "Run this chat as the planner on a strong model and hand the work to the cheapest helper that can do it well: Haiku to search and read, Sonnet to build what is already decided, Opus for the hard parts and review."
     },
