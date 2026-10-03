@@ -98,6 +98,8 @@ echo '{"used":true,
   | python3 "<this skill's folder>/scripts/report.py"
 ```
 
+`<this skill's folder>` is the directory holding the `SKILL.md` you are reading right now, so the grader is `scripts/report.py` beside this file. Use the path you opened this file from. Do not search the machine for another copy, and do not run it relative to the project you are working in.
+
 Incidents are objects: `{"severity": "harm"|"low", "note": "..."}`. A bare string still counts (it coerces to harm — nothing you record can vanish on a shape mismatch), but the object form is what lets a genuinely minor issue grade as minor. Omit `price_in_per_mtok` unless you have the real rate; never supply one from memory.
 
 **Persisting the card (opt-in).** If you keep a log or dashboard of your sessions, add `--log "<some-dir>/token-saver-cards.jsonl"` to the grader call and it appends the card as one JSON line there (`scripts/report.py`'s docstring says why an append-only line of the grader's own output is the one persistence this skill allows). Without `--log`, nothing touches disk. A failed `--log` write errors loudly — report it, never shrug it off.
@@ -130,7 +132,7 @@ token-saver report card
 | `HARM` | a wrong or partial answer reached the user, or spend went up. Forces grade F |
 | `UNSCORED` | the skill was not used, or nothing was recorded. **Not a pass** |
 
-What the grader will not do: infer a number that was not supplied (it prints `unavailable`), print a dollar figure without a real price, count a read whose file total was never recorded, or grade a session it has no ratio for. "Avoided" is honest here only because a file's size is a knowable fact, so it is what you did not load, not a guess about an alternate session. Run `python3 scripts/report.py --selftest` to see the negative controls that hold those rules in place.
+What the grader will not do: infer a number that was not supplied (it prints `unavailable`), print a dollar figure without a real price, count a read whose file total was never recorded, or grade a session it has no ratio for. "Avoided" is honest here only because a file's size is a knowable fact, so it is what you did not load, not a guess about an alternate session. Run `python3 "<this skill's folder>/scripts/report.py" --selftest` to see the negative controls that hold those rules in place.
 
 ## Invocation
 
