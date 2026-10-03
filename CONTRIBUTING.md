@@ -67,7 +67,7 @@ Renaming an existing skill is a breaking change for installed users, chat ribbon
 1. **Rename the folder and commands**:
    - Move `skills/<old-id>` to `skills/<new-id>`.
    - Update command files in `skills/<new-id>/commands/` (e.g. `<new-id>.md`).
-   - If the skill was already published and installed by users, keep the old command file as an alias shim pointing to the new one so user scripts and muscle memory do not break.
+   - A shim inside the renamed folder reaches nobody: a plugin's id is its name, so people on the old id never receive another update. If nobody has it installed yet, ship no shim. If people do, keep a small stub plugin under the old name whose only job is to say where it went.
 2. **Update identifiers across the package**:
    - In `skills/<new-id>/.claude-plugin/plugin.json`: update `"name": "<new-id>"` and bump `"version"`.
    - In `.claude-plugin/marketplace.json`: update `"name": "<new-id>"`, `"source": "./skills/<new-id>"`, and match the bumped `"version"`.
@@ -76,6 +76,9 @@ Renaming an existing skill is a breaking change for installed users, chat ribbon
    - Add a `## <new version>` entry in `skills/<new-id>/CHANGELOG.md` explaining the rename.
 4. **Coordinate with the Astrolabe Store**:
    - If the skill has a store listing in Astrolabe (`sbd-astrolabe/dashboard/app/market-catalog.json`), submit a paired PR updating the listing `id`, `command`, `activeCommand`, `handoffCommand`, and install steps to match.
+5. **Tell people who have the old one**:
+   - A rename is a new plugin that shares a repo, so `claude plugin update` does not carry anyone over. They run `claude plugin uninstall <old-id>@skills-town`, then `claude plugin install <new-id>@skills-town`.
+   - Say so in the CHANGELOG entry, and in the README table, which must point at the new folder.
 
 ## The audit gate
 
