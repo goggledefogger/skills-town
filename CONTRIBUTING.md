@@ -59,6 +59,24 @@ agents, `npx skills update` pulls the latest.
 Keep command file names and any phrase a launcher or button types the same across updates. Things
 outside this repo point at them.
 
+
+## Rename a skill or command
+
+Renaming an existing skill is a breaking change for installed users, chat ribbons, and automated launchers. When you must rename (for example, to resolve collisions with framework terms or built-in tools):
+
+1. **Rename the folder and commands**:
+   - Move `skills/<old-id>` to `skills/<new-id>`.
+   - Update command files in `skills/<new-id>/commands/` (e.g. `<new-id>.md`).
+   - If the skill was already published and installed by users, keep the old command file as an alias shim pointing to the new one so user scripts and muscle memory do not break.
+2. **Update identifiers across the package**:
+   - In `skills/<new-id>/.claude-plugin/plugin.json`: update `"name": "<new-id>"` and bump `"version"`.
+   - In `.claude-plugin/marketplace.json`: update `"name": "<new-id>"`, `"source": "./skills/<new-id>"`, and match the bumped `"version"`.
+   - In `skills/<new-id>/SKILL.md`: update frontmatter `name: <new-id>` and any slash command mentions.
+3. **Log the rename**:
+   - Add a `## <new version>` entry in `skills/<new-id>/CHANGELOG.md` explaining the rename.
+4. **Coordinate with the Astrolabe Store**:
+   - If the skill has a store listing in Astrolabe (`sbd-astrolabe/dashboard/app/market-catalog.json`), submit a paired PR updating the listing `id`, `command`, `activeCommand`, `handoffCommand`, and install steps to match.
+
 ## The audit gate
 
 A skill is only published here once it passes **all** of:
