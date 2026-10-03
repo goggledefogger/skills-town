@@ -79,6 +79,7 @@ Renaming an existing skill is a breaking change for installed users, chat ribbon
    - Add a `## <new version>` entry in `skills/<new-id>/CHANGELOG.md` explaining the rename.
 4. **Coordinate with the Astrolabe Store**:
    - If the skill has a store listing in Astrolabe (`sbd-astrolabe/dashboard/app/market-catalog.json`), submit a paired PR updating the listing `id`, `command`, `activeCommand`, `handoffCommand`, and install steps to match.
+   - Run `node scripts/catalog-listing.mjs <new-id>` and copy its `id`, commands and install lines into the listing rather than retyping them. Anything it prints as `TODO` is copy a human keeps.
 5. **Tell people who have the old one**:
    - A rename is a new plugin that shares a repo, so `claude plugin update` does not carry anyone over. They run `claude plugin uninstall <old-id>@skills-town`, then `claude plugin install <new-id>@skills-town`.
    - Say so in the CHANGELOG entry, and in the README table, which must point at the new folder.
