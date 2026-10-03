@@ -34,8 +34,21 @@ merged fix with the same version never reaches anyone.
 1. Bump `version` in `skills/<skill-id>/.claude-plugin/plugin.json`, and set the skill's entry in
    `.claude-plugin/marketplace.json` to the same number. Do it in the same PR as the change. When both
    files set a version, Claude Code uses the `plugin.json` one.
-2. Run `node scripts/check-versions.mjs` before you push. It fails if the two numbers differ, or if a
-   skill's files changed and its version did not. The `Version check` workflow runs it on every PR.
+2. Add an entry to `skills/<skill-id>/CHANGELOG.md`, newest first, with the heading `## <new version>`
+   and one or two sentences saying what changed. Write it for someone who already has the skill. The
+   `Version check` fails a bump with no entry. The Astrolabe Store shows this note to people who have
+   the skill.
+
+   ```markdown
+   # What changed
+
+   ## 1.7.5
+   One or two plain sentences for someone who already has the skill.
+   ```
+
+3. Run `node scripts/check-versions.mjs` before you push. It fails if the two numbers differ, if a
+   skill's files changed and its version did not, or if a bump has no changelog entry. The
+   `Version check` workflow runs it on every PR.
    `node scripts/check-versions.mjs --self-test` checks the script itself.
 
 What people see after the bump on Claude Code: if they turned on auto-update for this marketplace, new

@@ -19,6 +19,18 @@ function versionOf(entry, readFile) {
   return (pj && JSON.parse(pj).version) || entry.version;
 }
 
+// true when changelog text has "## <v>" followed by a non-empty line before the next "## " heading
+function hasEntry(text, v) {
+  const lines = (text || '').split('\n');
+  const i = lines.findIndex((l) => l.trimEnd() === `## ${v}`);
+  if (i < 0) return false;
+  for (const l of lines.slice(i + 1)) {
+    if (l.startsWith('## ')) return false;
+    if (l.trim()) return true;
+  }
+  return false;
+}
+
 function check(base) {
   const errors = [];
   const now = JSON.parse(readFileSync(MARKETPLACE, 'utf8')).plugins.filter((p) => typeof p.source === 'string');
@@ -47,6 +59,17 @@ function check(base) {
       errors.push(`${p.name}: files under ${dir}/ changed but the version is still ${versionOf(p, readNow)}. Bump "version" in ${dir}/.claude-plugin/plugin.json and in ${MARKETPLACE}, or users never get this change.`);
     }
   }
+
+  // version changed vs base: needs a changelog entry (new skills are exempt)
+  for (const p of now) {
+    const dir = norm(p.source);
+    const old = baseMarket.find((b) => b.name === p.name);
+    if (!old || !tryGit('ls-tree', root, `${dir}/`)) continue; // new skill
+    const v = versionOf(p, readNow);
+    if (versionOf(old, readBase) !== v && !hasEntry(readNow(`${dir}/CHANGELOG.md`), v)) {
+      errors.push(`${p.name}: version is now ${v} but CHANGELOG.md has no "## ${v}" entry. Add one or two sentences saying what changed, for someone who already has it.`);
+    }
+  }
   return errors;
 }
 
@@ -69,9 +92,17 @@ function selfTest() {
     put('skills/a/SKILL.md', 'two'); sh('add', '.'); sh('commit', '-q', '-m', 'change');
     assert.notEqual(run(), 0, 'unbumped change should fail');
     put(MARKETPLACE, market('1.0.1')); put('skills/a/.claude-plugin/plugin.json', plugin('1.0.1')); sh('add', '.'); sh('commit', '-q', '-m', 'bump');
-    assert.equal(run(), 0, 'bumped change should pass');
+    assert.notEqual(run(), 0, 'bump with no CHANGELOG.md should fail');
+    put('skills/a/CHANGELOG.md', '# What changed\n\n## 1.0.1\nFixed a typo.\n'); sh('add', '.'); sh('commit', '-q', '-m', 'changelog');
+    assert.equal(run(), 0, 'bumped change with changelog entry should pass');
     put(MARKETPLACE, market('1.0.2')); sh('add', '.'); sh('commit', '-q', '-m', 'mismatch');
     assert.notEqual(run(), 0, 'marketplace/plugin.json mismatch should fail');
+    assert.ok(hasEntry('# What changed\n\n## 1.7.5\nFixed it.\n\n## 1.7.4\nOld.\n', '1.7.5'), 'entry present should pass');
+    assert.ok(!hasEntry(null, '1.7.5'), 'missing file should fail');
+    assert.ok(!hasEntry('## 1.7.5\n\n## 1.7.4\nOld.\n', '1.7.5'), 'heading with no text should fail');
+    assert.ok(!hasEntry('## 1.7.5\n  \n', '1.7.5'), 'heading with only blank lines should fail');
+    assert.ok(!hasEntry('## 1.7.4\nOld.\n', '1.7.5'), 'other version only should fail');
+    assert.ok(!hasEntry('## 1.7.5\nFixed it.\n', '1.7'), 'prefix version should fail');
     console.log('self-test ok');
   } finally { rmSync(tmp, { recursive: true, force: true }); }
 }
