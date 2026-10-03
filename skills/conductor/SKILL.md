@@ -78,13 +78,13 @@ Keep the cards to these lines. No extra decoration, no card for a single quick r
 
 ## Report
 
-When asked for a report (`/orchestrator report`), or at the end of the session, list in plain words what each helper did and on which model, and anything you did yourself because handing it off was not worth it. Make it a table with a row per helper: its badge, what it did, and how it went. Put your own work in the last row under 🧭 **Conductor**. End with one line counting the helpers per model, like `🟢 ×3 · 🔵 ×2 · 🟣 ×1`.
+When asked for a report (`/conductor report`), or at the end of the session, list in plain words what each helper did and on which model, and anything you did yourself because handing it off was not worth it. Make it a table with a row per helper: its badge, what it did, and how it went. Put your own work in the last row under 🧭 **Conductor**. End with one line counting the helpers per model, like `🟢 ×3 · 🔵 ×2 · 🟣 ×1`.
 
 ## Handoff
 
-When asked for a handoff (`/orchestrator handoff`), the chat has grown too long to carry over, so write a short brief a fresh orchestrator chat can start from. Write it from what is already in the conversation; do not start helpers or read files to write it. Keep it under about 300 words: the point is to leave the long conversation behind.
+When asked for a handoff (`/conductor handoff`), the chat has grown too long to carry over, so write a short brief a fresh conductor chat can start from. Write it from what is already in the conversation; do not start helpers or read files to write it. Keep it under about 300 words: the point is to leave the long conversation behind.
 
-Reply with nothing before the block: open a fence of exactly 3 backticks tagged `handoff orchestrator`, write these lines inside it, close it with 3 backticks, then write this one line after it: "To carry on, start a new chat with /orchestrator followed by the text above."
+Reply with nothing before the block: open a fence of exactly 3 backticks tagged `handoff conductor`, write these lines inside it, close it with 3 backticks, then write this one line after it: "To carry on, start a new chat with /conductor followed by the text above."
 
 - Goal: what the user is trying to get done, in 1 or 2 lines
 - State: what is done and what is half done

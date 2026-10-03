@@ -1,5 +1,5 @@
 {
-  "name": "orchestrator",
+  "name": "conductor",
   "description": "Run this chat as the planner on a strong model and hand the work to the cheapest helper that can do it well: Haiku to search and read, Sonnet to build what is already decided, Opus for the hard parts and review.",
   "author": {
     "name": "goggledefogger"
