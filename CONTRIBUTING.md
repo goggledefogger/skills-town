@@ -31,6 +31,9 @@ personal data, no half-finished work, works for someone who isn't the author.
 The version string is the release. Claude Code only offers an update when the version changes, so a
 merged fix with the same version never reaches anyone.
 
+The script does all 3 steps below: `node scripts/bump-version.mjs <skill-id> <patch|minor|major> "<note>"`.
+Add `--dry-run` as a 4th argument to preview. It refuses if the two versions already disagree.
+
 1. Bump `version` in `skills/<skill-id>/.claude-plugin/plugin.json`, and set the skill's entry in
    `.claude-plugin/marketplace.json` to the same number. Do it in the same PR as the change. When both
    files set a version, Claude Code uses the `plugin.json` one.
