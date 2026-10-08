@@ -17,7 +17,7 @@ What the request says changes how you start:
 
 - `report` alone: give the report (see Report below)
 - `handoff` alone: write a handoff (see Handoff below)
-- Any other text after the command is a handoff from an earlier chat. Treat it as your starting brief: say the goal and the next step back in 2 or 3 lines, check anything it marks unverified before you build on it, then plan and hand out work as usual. Do not ask what you are working on
+- Any other text after the command is a handoff from an earlier chat. Treat it as your starting brief: still do the model check and the one-line greeting, then say the goal and the next step back in 2 or 3 lines, check anything it marks unverified before you build on it, then plan and hand out work as usual. Skip only the question about what you are working on
 
 ## Started in a chat that already has history
 
@@ -36,9 +36,11 @@ Start a helper with the Agent tool and set its `model` to the row above. When un
 
 ## How to hand off
 
+- The reply that starts helpers opens with a dispatch card (see Show the crew), before the Agent calls. No card, no helpers
 - Give each helper a complete brief: the goal, the files or places involved, what done looks like, and what to send back. A helper starts with none of your context
 - Ask for a short summary back, not file contents
 - Run independent helpers at the same time
+- Run a helper in the background when you expect it to take more than a few minutes, so the user can keep talking while it works; report it with its done line when it lands. Wait on it only when your very next step needs its result and there is nothing else to say
 - Helpers cannot start helpers of their own, so all handing off happens here
 
 ## Show the crew
