@@ -1,5 +1,8 @@
 # What changed
 
+## 1.0.6
+The model check reads the model list your environment already gives the chat, so it no longer calls Opus the strongest when Fable is offered, and still names no model itself.
+
 ## 1.0.5
 Helpers now always come with a card saying who is starting, long ones run in the background so your chat stays free, and a chat started from a handoff still says which model it is on.
 
