@@ -35,6 +35,20 @@ The one script here is a grader, not machinery: it only does arithmetic on numbe
 
 3. **Never retry a token or usage limit failure.** A limit error is not transient. Reduce the input, pick a cheaper path, or wait for the reset. Retrying turns one refusal into several.
 
+## The rules travel with the work
+
+A helper (any subagent, Agent tool call, Task, or delegated worker) starts with none of this skill. So when Token Saver is on, every brief you write to a helper carries this block verbatim, and asks the helper to send its read numbers back:
+
+> Token Saver is on for this job. Read passages, not files: search first (rg -n or grep -n), then read only the span you need, and take a second bounded read before you ever load a whole file. Never retry a token or usage-limit failure. Correctness outranks saving: on anything consequential, read fully and say so. In your summary, name what you did not read, and give bytes read against the file's total for each narrow read, or say unavailable.
+
+This is the portable mechanism. It works on every agent.
+
+On Claude Code the plugin also ships a `SubagentStart` hook (`hooks/hooks.json`, which runs `scripts/helper_brief.py`). It adds a short note with the same block to every subagent spawned in a session where `/token-saver` was run. What it does: it adds about 80 words of context to the helper. What it does not do: it selects nothing, filters nothing, and keeps no state. If it cannot tell the skill was turned on this session, it adds nothing, which is the safe direction. On other agents the hook does not exist, and the brief is the whole mechanism.
+
+An always-on ruleset re-sent to every call can cost more than it saves on reasoning models. That is why the block is short, and why it is only injected in sessions where the skill was turned on, never because the plugin is installed.
+
+Helpers on cheaper models are still counted in the whole job (rule 2).
+
 ## Never trade these for tokens
 
 This is the load-bearing half of the skill. A token budget that produces a wrong answer cost more than it saved.
@@ -54,6 +68,8 @@ No packet builder, no state file, no relevance scoring, no content selection of 
 - Writing a packet to disk and reading it back costs **more** than a scoped `rg -C 5`, because the agent doing the reading is the model you were trying to protect. Packet building only pays when the packet crosses into a different context
 
 A rule you follow cannot silently return nothing. That is the entire argument for keeping the working half of this skill prose-only. The grader is exempt from that argument because its failure mode is the safe direction: given missing or malformed input it degrades to `unavailable` and `UNSCORED`, never to a good grade.
+
+The `SubagentStart` hook is exempt for the same reason. It only adds text, and only when activation is visible in the session transcript. Given missing or unreadable input it adds nothing. It never reads project files and never chooses content.
 
 ## Already covered, do not duplicate
 
@@ -78,13 +94,14 @@ Safe, careful authorship says nothing about whether the algorithm works. The ski
 
 ## Report back
 
-Track 4 things as you work, then grade the session. Do not keep a running commentary, just note them:
+Track 5 things as you work, then grade the session. Do not keep a running commentary, just note them:
 
 - each file you read narrowly: bytes read, and the file's real total size (`wc -c`)
 - token counts per call when the host reports them
 - a rough running total of tool output you received (command results, probe output, logs) as `tool_output_bytes` — this is usually the real cost driver, and recording it turns a recurring caveat sentence into a number on the card
 - **corrections**: every time a bounded read missed and needed a second read
 - **incidents**: any wrong or partial answer that reached the user, and any case where the discipline cost more than it saved
+- **helpers**: for each helper, a short label, its model, its token count when the host reports one (Claude Code prints `subagent_tokens` in the Agent tool result), and the bytes read and file totals it reported in its summary, or `unavailable`
 
 At the end, hand those to the grader on stdin (no file is written into the user's project unless they ask):
 
@@ -93,27 +110,30 @@ echo '{"used":true,
        "reads":[{"path":"a.py","bytes_read":900,"bytes_total":42000}],
        "calls":[{"model":"opus","in_tokens":4100,"out_tokens":600}],
        "corrections":0, "tool_output_bytes":52000,
-       "incidents":[{"severity":"harm","note":"answered from a partial read"}],
-       "price_in_per_mtok":15.0}' \
+       "helpers":[{"label":"config scan","model":"haiku","tokens":38000,
+                   "reads":[{"path":"b.py","bytes_read":1200,"bytes_total":30000}]},
+                  {"label":"log triage","model":"haiku","tokens":"unavailable"}],
+       "incidents":[]}' \
   | python3 "<this skill's folder>/scripts/report.py"
 ```
 
 `<this skill's folder>` is the directory holding the `SKILL.md` you are reading right now, so the grader is `scripts/report.py` beside this file. Use the path you opened this file from. Do not search the machine for another copy, and do not run it relative to the project you are working in.
 
-Incidents are objects: `{"severity": "harm"|"low", "note": "..."}`. A bare string still counts (it coerces to harm — nothing you record can vanish on a shape mismatch), but the object form is what lets a genuinely minor issue grade as minor. Omit `price_in_per_mtok` unless you have the real rate; never supply one from memory.
+Incidents are objects: `{"severity": "harm"|"low", "note": "..."}`. A bare string still counts (it coerces to harm — nothing you record can vanish on a shape mismatch), but the object form is what lets a genuinely minor issue grade as minor. Omit `price_in_per_mtok` unless you have the real rate; never supply one from memory. The dollar figure covers this session's own reads only, because helpers run at their own prices.
 
 **Persisting the card (opt-in).** If you keep a log or dashboard of your sessions, add `--log "<some-dir>/token-saver-cards.jsonl"` to the grader call and it appends the card as one JSON line there (`scripts/report.py`'s docstring says why an append-only line of the grader's own output is the one persistence this skill allows). Without `--log`, nothing touches disk. A failed `--log` write errors loudly — report it, never shrug it off.
 
 ```
 token-saver report card
-  grade    A — read just what it needed, skipping 98% of the file content
-  saved    ~10,275 tokens of reading avoided (estimate), roughly $0.15
-  spent    1 model call(s), 4,100 tokens in / 600 out
+  grade    A — read just what it needed, skipping 97% of the file content
+  saved    ~17,475 tokens of reading avoided (estimate)
+  spent    1 model call(s), 4,100 tokens in / 600 out, plus 38,000 in helpers
+  helpers  2 helpers: 1 with read numbers, 1 nothing reported · 38,000 tokens (from 1 of 2)
   safety   clean — no corners cut, nothing went wrong
   note     ~13,000 of the spent tokens were command output, which reading discipline can't shrink
 ```
 
-**Subagents are off the card.** The ledger only knows what this session read; a lane run by a subagent reads on its own and reports nothing back to the grader. When lanes did real reading, say so in the one sentence after the card rather than letting the grade imply the whole job was cheap.
+**Helpers are on the card when they report.** The ledger counts what helpers reported in their summaries. A helper that reported nothing shows as unavailable rather than being guessed. Say so in the one sentence after the card when it matters.
 
 **Present the card as the grader prints it.** Do not rewrite it, pad it with per-file breakdowns, byte tallies, or method notes — that turns 3 KPIs back into jargon. One plain sentence after the card is allowed when the real cost driver was something the ledger cannot see (tool output, SSH probes); keep it to words a non-engineer follows. Full detail only if the user asks.
 
@@ -138,4 +158,4 @@ What the grader will not do: infer a number that was not supplied (it prints `un
 
 Manual only (`/token-saver`), set by `disable-model-invocation: true`. A token-saving ruleset that auto-triggers can quietly narrow what gets read on work where that is the wrong trade. Remove that frontmatter line if you want it model-invocable. It is a Claude Code field; other agents ignore it.
 
-The skill is a plain Agent Skills folder: `SKILL.md`, `scripts/report.py`, and two thin `commands/` pointers for Claude Code. Install it as a Claude Code plugin from the `goggledefogger/skills-town` marketplace, or into any agent that reads `SKILL.md` with `npx skills add goggledefogger/skills-town --skill token-saver`.
+The skill is a plain Agent Skills folder: `SKILL.md`, `scripts/report.py`, `scripts/helper_brief.py`, `hooks/hooks.json`, and the `commands/` pointers for Claude Code. `disable-model-invocation: true` also means the skill cannot be preloaded into a subagent through an agent definition's `skills:` field, which is why the hook exists. Install it as a Claude Code plugin from the `goggledefogger/skills-town` marketplace, or into any agent that reads `SKILL.md` with `npx skills add goggledefogger/skills-town --skill token-saver`.
