@@ -37,7 +37,8 @@ HELPER_BLOCK = (
     "bytes read against the file's total for each narrow read, or say unavailable."
 )
 
-MARKERS = ("/token-saver", "token-saver:token-saver")
+COMMAND_MARKER = "<command-name>/token-saver"  # also covers /token-saver:token-saver[-report]
+TYPED_PREFIX = "/token-saver"  # a plain-typed command is the start of the message
 
 
 def _texts(content):
@@ -57,7 +58,8 @@ def _texts(content):
 def activated(transcript_path) -> bool:
     """One pass over the transcript JSONL: did a user entry invoke the skill?"""
     try:
-        with open(transcript_path, encoding="utf-8") as fh:
+        # errors="replace": one bad byte spoils only its own line, not the scan
+        with open(transcript_path, encoding="utf-8", errors="replace") as fh:
             for line in fh:
                 try:
                     entry = json.loads(line)
@@ -67,9 +69,10 @@ def activated(transcript_path) -> bool:
                     continue
                 message = entry.get("message")
                 content = message.get("content") if isinstance(message, dict) else None
-                if any(m in t for t in _texts(content) for m in MARKERS):
+                if any(COMMAND_MARKER in t or t.strip().startswith(TYPED_PREFIX)
+                       for t in _texts(content)):
                     return True
-    except (OSError, UnicodeDecodeError):
+    except OSError:
         return False
     return False
 
@@ -114,15 +117,29 @@ def selftest() -> int:
         {"type": "text", "text": "<command-name>/token-saver:token-saver</command-name>"}]}}])
     c = transcript("c.jsonl", noise + [{"type": "user", "message": {"role": "user", "content": "hello"}}])
 
-    for label, p in (("activation as string", a), ("activation in text blocks", b)):
+    def user(text):
+        return {"type": "user", "message": {"role": "user", "content": text}}
+
+    d = transcript("d.jsonl", [user("look at skills/token-saver/SKILL.md")])
+    e = transcript("e.jsonl", [user("do not run /token-saver here")])
+    f = transcript("f.jsonl", [user("/token-saver report")])
+    g = tmp / "g.jsonl"
+    g.write_bytes(b'\xff\xfe bad bytes \x80\n' + json.dumps(user("/token-saver")).encode() + b"\n")
+
+    for label, p in (("activation as string", a), ("activation in text blocks", b),
+                     ("plain-typed /token-saver report", f),
+                     ("bad bytes on line 1, activation on line 2", g)):
         code, out = call(json.dumps({"hook_event_name": "SubagentStart", "transcript_path": str(p)}))
         try:
             ctx = json.loads(out)["hookSpecificOutput"]["additionalContext"]
         except Exception:
             ctx = None
         check(f"{label} injects the block", code == 0 and ctx == HELPER_BLOCK)
-    code, out = call(json.dumps({"transcript_path": str(c)}))
-    check("no activation prints nothing", code == 0 and out == "")
+    for label, p in (("no activation", c),
+                     ("a message that mentions the skill's file path", d),
+                     ("a message that says not to run /token-saver", e)):
+        code, out = call(json.dumps({"transcript_path": str(p)}))
+        check(f"{label} prints nothing", code == 0 and out == "")
     code, out = call("{not json")
     check("malformed stdin prints nothing, exit 0", code == 0 and out == "")
     code, out = call(json.dumps({"hook_event_name": "SubagentStart"}))

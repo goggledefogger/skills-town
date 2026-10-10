@@ -106,6 +106,7 @@ def summarize(ledger: dict) -> dict:
 
     # Only reads with BOTH numbers can support a ratio; the rest are counted and named.
     scorable = [r for r in reads if _scorable(r)]
+    own_scorable = [r for r in ledger.get("reads") or [] if isinstance(r, dict) and _scorable(r)]
     read_bytes = sum(_num(r["bytes_read"]) for r in scorable)
     total_bytes = sum(_num(r["bytes_total"]) for r in scorable)
     unscorable = len(reads) - len(scorable)
@@ -159,9 +160,12 @@ def summarize(ledger: dict) -> dict:
     tool_bytes = _num(ledger.get("tool_output_bytes"))
     price = ledger.get("price_in_per_mtok")
     price = float(price) if isinstance(price, (int, float)) and not isinstance(price, bool) else None
+    # Dollars cover this session's own reads only: helpers run at their own prices.
+    own_total = sum(_num(r["bytes_total"]) for r in own_scorable)
+    own_avoided = max(0, own_total - sum(_num(r["bytes_read"]) for r in own_scorable))
     cost_avoided = (
-        round((avoided / BYTES_PER_TOKEN) / 1_000_000 * price, 4)
-        if avoided is not None and price is not None
+        round((own_avoided / BYTES_PER_TOKEN) / 1_000_000 * price, 4)
+        if own_scorable and price is not None
         else None
     )
 
@@ -169,9 +173,13 @@ def summarize(ledger: dict) -> dict:
     if helpers is not None:
         with_reads = sum(1 for h in helpers if any(_scorable(r) for r in h["reads"]))
         with_tokens = [h["tokens"] for h in helpers if h["tokens"] is not None]
+        # The three buckets partition the list: read numbers first, then tokens only, then nothing.
         helper_summary = {
             "count": len(helpers),
             "with_read_numbers": with_reads,
+            "tokens_only": sum(
+                1 for h in helpers
+                if h["tokens"] is not None and not any(_scorable(r) for r in h["reads"])),
             "with_no_numbers": sum(
                 1 for h in helpers
                 if h["tokens"] is None and not any(_scorable(r) for r in h["reads"])),
@@ -227,7 +235,6 @@ def render(s: dict) -> str:
         )
     else:
         rough = (e["bytes_read"] or 0) // BYTES_PER_TOKEN + (e["tool_output_tokens_estimated"] or 0)
-        rough += (s.get("helpers") or {}).get("tokens") or 0
         spent_line = (
             f"~{rough:,} tokens of recorded reading and command output (rough estimate; model token counts not reported)"
             if rough
@@ -235,7 +242,7 @@ def render(s: dict) -> str:
         )
 
     ht = (s.get("helpers") or {}).get("tokens")
-    if ht and e["input_tokens"] is not None:
+    if ht:
         spent_line += f", plus {ht:,} in helpers"
 
     safety_words = {
@@ -259,9 +266,13 @@ def render(s: dict) -> str:
             tok = f"{h['tokens']:,} tokens (from {h['tokens_reported_by']} of {h['count']})"
         else:
             tok = f"{h['tokens']:,} tokens"
-        lines.append(
-            f"  helpers  {h['count']} reported, {h['with_read_numbers']} with read numbers, "
-            f"{h['with_no_numbers']} with no numbers · {tok}")
+        buckets = [f"{n} {label}" for n, label in (
+            (h["with_read_numbers"], "with read numbers"),
+            (h["tokens_only"], "tokens only"),
+            (h["with_no_numbers"], "nothing reported")) if n]
+        noun = "helper" if h["count"] == 1 else "helpers"
+        head = f"{h['count']} {noun}" + (": " + ", ".join(buckets) if buckets else "")
+        lines.append(f"  helpers  {head} · {tok}")
     lines.append(f"  safety   {safety_words[r['state']]}")
     if e["tool_output_tokens_estimated"]:
         lines.append(
@@ -398,7 +409,7 @@ def selftest() -> int:
     assert s1["efficiency"]["bytes_read"] == 650 and s1["efficiency"]["bytes_available"] == 10950, s1
     assert s1["helpers"]["tokens"] == 41500 and s1["helpers"]["with_read_numbers"] == 2, s1
     card = render(s1)
-    assert "plus 41,500 in helpers" in card and "2 reported, 2 with read numbers" in card, card
+    assert "plus 41,500 in helpers" in card and "2 helpers: 2 with read numbers" in card, card
 
     # negative control: a helper with no totals does not move the ratio
     s2 = summarize({**base, "helpers": [{"label": "x", "tokens": 7, "reads": [{"bytes_read": 9_000_000}]}]})
@@ -416,15 +427,37 @@ def selftest() -> int:
     s4 = summarize({**base, "helpers": ["bare label", None, 7, {"reads": "oops", "tokens": "lots"},
                                         {"reads": [None, "x"], "tokens": -5}]})
     assert s4["helpers"]["count"] == 5 and s4["helpers"]["with_no_numbers"] == 5, s4
+    for hs in (s1["helpers"], s3["helpers"], s4["helpers"]):
+        assert hs["with_read_numbers"] + hs["tokens_only"] + hs["with_no_numbers"] == hs["count"], hs
     assert s4["helpers"]["tokens"] is None, s4
     assert s4["efficiency"]["read_ratio"] == s0["efficiency"]["read_ratio"], s4
     render(s4)
 
     # no helpers key: no helpers line, and the card is exactly what it was
     assert "helpers" not in render(s0) and "helpers" not in s0, render(s0)
+
+    # mixed helpers: buckets partition exactly, zero buckets are omitted, tokens-only has a bucket
+    s5 = summarize({**base, "helpers": [
+        {"tokens": 38000, "reads": [{"bytes_read": 1, "bytes_total": 10}]},
+        {"tokens": 5}, "bare", "bare2"]})
+    hs = s5["helpers"]
+    assert (hs["with_read_numbers"], hs["tokens_only"], hs["with_no_numbers"], hs["count"]) == (1, 1, 2, 4), hs
+    assert "4 helpers: 1 with read numbers, 1 tokens only, 2 nothing reported" in render(s5), render(s5)
+    assert "0 tokens only" not in render(s1) and "0 nothing" not in render(s1), render(s1)
+
+    # no call tokens: the rough estimate stays reading plus output, helpers appended apart
+    s6 = summarize({"used": True, "reads": [{"bytes_read": 400, "bytes_total": 40000}],
+                    "helpers": [{"tokens": 9000}]})
+    assert "~100 tokens of recorded reading" in render(s6), render(s6)
+    assert render(s6).count("plus 9,000 in helpers") == 1, render(s6)
+
+    # dollars cover the session's own reads only, never helper reads
+    s7 = summarize({**base, "price_in_per_mtok": 10.0, "helpers": [
+        {"reads": [{"bytes_read": 0, "bytes_total": 4_000_000}]}]})
+    assert s7["efficiency"]["cost_avoided_usd_estimated"] == round(500 / 4 / 1_000_000 * 10.0, 4), s7
     assert "helpers" not in render(summarize({**base, "helpers": "nope"}))
 
-    print("selftest: 24 checks passed")
+    print("selftest: 28 checks passed")
     return 0
 
 

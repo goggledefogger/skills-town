@@ -43,7 +43,7 @@ A helper (any subagent, Agent tool call, Task, or delegated worker) starts with 
 
 This is the portable mechanism. It works on every agent.
 
-On Claude Code the plugin also ships a `SubagentStart` hook (`hooks/hooks.json`, which runs `scripts/helper_brief.py`). It adds the same block to every subagent spawned in a session where `/token-saver` was run. What it does: it adds about 80 words of context to the helper. What it does not do: it selects nothing, filters nothing, and keeps no state. If it cannot tell the skill was turned on this session, it adds nothing, which is the safe direction. On other agents the hook does not exist, and the brief is the whole mechanism.
+On Claude Code the plugin also ships a `SubagentStart` hook (`hooks/hooks.json`, which runs `scripts/helper_brief.py`). It adds a short note with the same block to every subagent spawned in a session where `/token-saver` was run. What it does: it adds about 80 words of context to the helper. What it does not do: it selects nothing, filters nothing, and keeps no state. If it cannot tell the skill was turned on this session, it adds nothing, which is the safe direction. On other agents the hook does not exist, and the brief is the whole mechanism.
 
 An always-on ruleset re-sent to every call can cost more than it saves on reasoning models. That is why the block is short, and why it is only injected in sessions where the skill was turned on, never because the plugin is installed.
 
@@ -113,14 +113,13 @@ echo '{"used":true,
        "helpers":[{"label":"config scan","model":"haiku","tokens":38000,
                    "reads":[{"path":"b.py","bytes_read":1200,"bytes_total":30000}]},
                   {"label":"log triage","model":"haiku","tokens":"unavailable"}],
-       "incidents":[{"severity":"harm","note":"answered from a partial read"}],
-       "price_in_per_mtok":15.0}' \
+       "incidents":[]}' \
   | python3 "<this skill's folder>/scripts/report.py"
 ```
 
 `<this skill's folder>` is the directory holding the `SKILL.md` you are reading right now, so the grader is `scripts/report.py` beside this file. Use the path you opened this file from. Do not search the machine for another copy, and do not run it relative to the project you are working in.
 
-Incidents are objects: `{"severity": "harm"|"low", "note": "..."}`. A bare string still counts (it coerces to harm — nothing you record can vanish on a shape mismatch), but the object form is what lets a genuinely minor issue grade as minor. Omit `price_in_per_mtok` unless you have the real rate; never supply one from memory.
+Incidents are objects: `{"severity": "harm"|"low", "note": "..."}`. A bare string still counts (it coerces to harm — nothing you record can vanish on a shape mismatch), but the object form is what lets a genuinely minor issue grade as minor. Omit `price_in_per_mtok` unless you have the real rate; never supply one from memory. The dollar figure covers this session's own reads only, because helpers run at their own prices.
 
 **Persisting the card (opt-in).** If you keep a log or dashboard of your sessions, add `--log "<some-dir>/token-saver-cards.jsonl"` to the grader call and it appends the card as one JSON line there (`scripts/report.py`'s docstring says why an append-only line of the grader's own output is the one persistence this skill allows). Without `--log`, nothing touches disk. A failed `--log` write errors loudly — report it, never shrug it off.
 
@@ -129,7 +128,7 @@ token-saver report card
   grade    A — read just what it needed, skipping 97% of the file content
   saved    ~17,475 tokens of reading avoided (estimate)
   spent    1 model call(s), 4,100 tokens in / 600 out, plus 38,000 in helpers
-  helpers  2 reported, 1 with read numbers, 1 with no numbers · 38,000 tokens (from 1 of 2)
+  helpers  2 helpers: 1 with read numbers, 1 nothing reported · 38,000 tokens (from 1 of 2)
   safety   clean — no corners cut, nothing went wrong
   note     ~13,000 of the spent tokens were command output, which reading discipline can't shrink
 ```
