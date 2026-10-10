@@ -1,5 +1,8 @@
 # What changed
 
+## 1.0.8
+Briefs carry Token Saver's helper block when that skill is on, and the report shows each helper's token count when the host reports one.
+
 ## 1.0.7
 Any prompt or brief written to start a new chat goes in the handoff conductor block, however you asked for it, so Astrolabe shows the Start button for it; a paste fence or a bare code block no longer slips through.
 
