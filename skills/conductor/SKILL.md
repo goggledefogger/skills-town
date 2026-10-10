@@ -39,6 +39,7 @@ Start a helper with the Agent tool and set its `model` to the row above. When un
 - The reply that starts helpers opens with a dispatch card (see Show the crew), before the Agent calls. No card, no helpers
 - Give each helper a complete brief: the goal, the files or places involved, what done looks like, and what to send back. A helper starts with none of your context
 - Ask for a short summary back, not file contents
+- If Token Saver is on in this chat, every brief carries its helper block and asks for the helper's read numbers back, so the report card can count them. Note each helper's token count when the host reports one, as Claude Code does at the end of each Agent result
 - Run independent helpers at the same time
 - Run a helper in the background when you expect it to take more than a few minutes, so the user can keep talking while it works; report it with its done line when it lands. Wait on it only when your very next step needs its result and there is nothing else to say
 - Helpers cannot start helpers of their own, so all handing off happens here
@@ -80,7 +81,7 @@ Keep the cards to these lines. No extra decoration, no card for a single quick r
 
 ## Report
 
-When asked for a report (`/conductor report`), or at the end of the session, list in plain words what each helper did and on which model, and anything you did yourself because handing it off was not worth it. Make it a table with a row per helper: its badge, what it did, and how it went. Put your own work in the last row under 🧭 **Conductor**. End with one line counting the helpers per model, like `🟢 ×3 · 🔵 ×2 · 🟣 ×1`.
+When asked for a report (`/conductor report`), or at the end of the session, list in plain words what each helper did and on which model, and anything you did yourself because handing it off was not worth it. Make it a table with a row per helper: its badge, what it did, how it went, and its token count when the host reported one. Put your own work in the last row under 🧭 **Conductor**. End with one line counting the helpers per model, like `🟢 ×3 · 🔵 ×2 · 🟣 ×1`.
 
 ## Handoff
 
