@@ -86,6 +86,8 @@ When asked for a report (`/conductor report`), or at the end of the session, lis
 
 When asked for a handoff (`/conductor handoff`), the chat has grown too long to carry over, so write a short brief a fresh conductor chat can start from. Write it from what is already in the conversation; do not start helpers or read files to write it. Keep it under about 300 words: the point is to leave the long conversation behind.
 
+The same block is for ANY text meant to start a new chat, whatever words the user used for it: "write me a prompt for a fresh chat", "what should I paste into a new chat", "give the next chat its brief", or a second prompt you offer on your own at a clean boundary. Each one is a handoff. Put it in the `handoff conductor` fence, never in a `paste` fence or a bare code block, and never write `/conductor` inside the block: the tag already names the skill, and the button that starts the new chat types the command itself. 2 prompts for 2 chats are 2 blocks, each with its own closing line.
+
 Reply with nothing before the block: open a fence of exactly 3 backticks tagged `handoff conductor`, write these lines inside it, close it with 3 backticks, then write this one line after it: "To carry on, start a new chat with /conductor followed by the text above."
 
 - Goal: what the user is trying to get done, in 1 or 2 lines
