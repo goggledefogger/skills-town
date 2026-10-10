@@ -1,5 +1,8 @@
 # What changed
 
+## 1.0.7
+Any prompt or brief written to start a new chat goes in the handoff conductor block, however you asked for it, so Astrolabe shows the Start button for it; a paste fence or a bare code block no longer slips through.
+
 ## 1.0.6
 The model check reads the model list your environment already gives the chat, so it no longer calls Opus the strongest when Fable is offered, and still names no model itself.
 
