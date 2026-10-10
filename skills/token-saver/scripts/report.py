@@ -16,7 +16,17 @@ Ledger JSON (every key optional; missing keys degrade the report, never fake it)
    "calls":       [{"model": "opus", "in_tokens": 1200, "out_tokens": 300}],
    "retries": 0, "corrections": 1, "tool_output_bytes": 52000,
    "incidents":   [{"severity": "harm", "note": "answered from a partial read"}],
+   "helpers":     [{"label": "scan", "model": "haiku", "tokens": 38000,
+                    "reads": [{"path": "b.py", "bytes_read": 1200, "bytes_total": 30000}]},
+                   {"label": "triage"}],
    "price_in_per_mtok": 15.0}
+
+Helpers (optional): each entry may carry `label`, `model`, `tokens` (or `in_tokens` and
+`out_tokens`), `reads` (same shape as top-level reads) and `bytes_read`/`bytes_total`.
+Reads with both byte numbers fold into the same ratio as the session's own reads, and
+reported tokens add to the spent line. Anything a helper did not report is
+`unavailable`, never inferred. A bare string is a helper that reported nothing. With no
+`helpers` key the card has no helpers line at all.
 
 Usage:
   report.py --ledger ledger.json [--json]
@@ -55,11 +65,34 @@ def _num(value) -> int | None:
     return int(value) if value >= 0 else None
 
 
+def _helper(h) -> dict:
+    """Normalize one helper entry. Malformed or empty reads as everything unavailable."""
+    if not isinstance(h, dict):
+        return {"reads": [], "tokens": None}
+    reads = [r for r in h.get("reads") or [] if isinstance(r, dict)] if isinstance(h.get("reads"), list) else []
+    if "bytes_read" in h or "bytes_total" in h:
+        reads.append({"bytes_read": h.get("bytes_read"), "bytes_total": h.get("bytes_total")})
+    tokens = _num(h.get("tokens"))
+    if tokens is None:
+        t_in, t_out = _num(h.get("in_tokens")), _num(h.get("out_tokens"))
+        tokens = t_in + t_out if t_in is not None and t_out is not None else None
+    return {"reads": reads, "tokens": tokens}
+
+
+def _scorable(r: dict) -> bool:
+    return _num(r.get("bytes_read")) is not None and _num(r.get("bytes_total")) is not None
+
+
 def summarize(ledger: dict) -> dict:
     if not isinstance(ledger, dict):
         raise ValueError("ledger must be a JSON object")
 
     reads = [r for r in ledger.get("reads") or [] if isinstance(r, dict)]
+    helpers = None
+    if isinstance(ledger.get("helpers"), list):
+        helpers = [_helper(h) for h in ledger["helpers"]]
+        for h in helpers:
+            reads.extend(h["reads"])
     calls = [c for c in ledger.get("calls") or [] if isinstance(c, dict)]
     # An incident the caller supplied must never vanish on a shape mismatch —
     # a malformed entry coerces to harm instead of silently improving the grade.
@@ -72,10 +105,7 @@ def summarize(ledger: dict) -> dict:
     used = ledger.get("used")
 
     # Only reads with BOTH numbers can support a ratio; the rest are counted and named.
-    scorable = [
-        r for r in reads
-        if _num(r.get("bytes_read")) is not None and _num(r.get("bytes_total")) is not None
-    ]
+    scorable = [r for r in reads if _scorable(r)]
     read_bytes = sum(_num(r["bytes_read"]) for r in scorable)
     total_bytes = sum(_num(r["bytes_total"]) for r in scorable)
     unscorable = len(reads) - len(scorable)
@@ -135,7 +165,21 @@ def summarize(ledger: dict) -> dict:
         else None
     )
 
-    return {
+    helper_summary = None
+    if helpers is not None:
+        with_reads = sum(1 for h in helpers if any(_scorable(r) for r in h["reads"]))
+        with_tokens = [h["tokens"] for h in helpers if h["tokens"] is not None]
+        helper_summary = {
+            "count": len(helpers),
+            "with_read_numbers": with_reads,
+            "with_no_numbers": sum(
+                1 for h in helpers
+                if h["tokens"] is None and not any(_scorable(r) for r in h["reads"])),
+            "tokens_reported_by": len(with_tokens),
+            "tokens": sum(with_tokens) if with_tokens else None,
+        }
+
+    out = {
         "efficiency": {
             "grade": grade,
             "basis": basis,
@@ -153,6 +197,9 @@ def summarize(ledger: dict) -> dict:
         },
         "risk": {"state": risk, "why": why},
     }
+    if helper_summary is not None:
+        out["helpers"] = helper_summary
+    return out
 
 
 def render(s: dict) -> str:
@@ -180,11 +227,16 @@ def render(s: dict) -> str:
         )
     else:
         rough = (e["bytes_read"] or 0) // BYTES_PER_TOKEN + (e["tool_output_tokens_estimated"] or 0)
+        rough += (s.get("helpers") or {}).get("tokens") or 0
         spent_line = (
             f"~{rough:,} tokens of recorded reading and command output (rough estimate; model token counts not reported)"
             if rough
             else "unknown — nothing recorded"
         )
+
+    ht = (s.get("helpers") or {}).get("tokens")
+    if ht and e["input_tokens"] is not None:
+        spent_line += f", plus {ht:,} in helpers"
 
     safety_words = {
         "CLEAN": "clean — no corners cut, nothing went wrong",
@@ -198,8 +250,19 @@ def render(s: dict) -> str:
         f"  grade    {grade_line}",
         f"  saved    {saved_line}",
         f"  spent    {spent_line}",
-        f"  safety   {safety_words[r['state']]}",
     ]
+    h = s.get("helpers")
+    if h is not None:
+        if h["tokens"] is None:
+            tok = "tokens unavailable"
+        elif h["tokens_reported_by"] < h["count"]:
+            tok = f"{h['tokens']:,} tokens (from {h['tokens_reported_by']} of {h['count']})"
+        else:
+            tok = f"{h['tokens']:,} tokens"
+        lines.append(
+            f"  helpers  {h['count']} reported, {h['with_read_numbers']} with read numbers, "
+            f"{h['with_no_numbers']} with no numbers · {tok}")
+    lines.append(f"  safety   {safety_words[r['state']]}")
     if e["tool_output_tokens_estimated"]:
         lines.append(
             f"  note     ~{e['tool_output_tokens_estimated']:,} of the spent tokens were command output, "
@@ -323,7 +386,45 @@ def selftest() -> int:
     import shutil
     shutil.rmtree(tmp, ignore_errors=True)
 
-    print("selftest: 18 checks passed")
+    # helpers: reads with both numbers fold into the ratio and tokens add to spend
+    base = {"used": True, "reads": [{"bytes_read": 500, "bytes_total": 1000}],
+            "calls": [{"in_tokens": 100, "out_tokens": 50}]}
+    s0 = summarize(base)
+    s1 = summarize({**base, "helpers": [
+        {"label": "a", "model": "haiku", "tokens": 40000,
+         "reads": [{"bytes_read": 100, "bytes_total": 9000}]},
+        {"label": "b", "in_tokens": 1000, "out_tokens": 500, "bytes_read": 50, "bytes_total": 950},
+    ]})
+    assert s1["efficiency"]["bytes_read"] == 650 and s1["efficiency"]["bytes_available"] == 10950, s1
+    assert s1["helpers"]["tokens"] == 41500 and s1["helpers"]["with_read_numbers"] == 2, s1
+    card = render(s1)
+    assert "plus 41,500 in helpers" in card and "2 reported, 2 with read numbers" in card, card
+
+    # negative control: a helper with no totals does not move the ratio
+    s2 = summarize({**base, "helpers": [{"label": "x", "tokens": 7, "reads": [{"bytes_read": 9_000_000}]}]})
+    assert s2["efficiency"]["read_ratio"] == s0["efficiency"]["read_ratio"], s2
+    assert s2["efficiency"]["bytes_read"] == s0["efficiency"]["bytes_read"], s2
+
+    # negative control: a helper with no tokens does not change the spent count
+    s3 = summarize({**base, "helpers": [{"label": "y", "bytes_read": 1, "bytes_total": 10}]})
+    assert s3["helpers"]["tokens"] is None, s3
+    assert "plus" not in render(s3) and "tokens unavailable" in render(s3), render(s3)
+    s3b = summarize({**base, "helpers": [{"label": "y", "in_tokens": 5}]})  # half a pair is not a count
+    assert s3b["helpers"]["tokens"] is None, s3b
+
+    # negative control: malformed entries never crash and read as unavailable
+    s4 = summarize({**base, "helpers": ["bare label", None, 7, {"reads": "oops", "tokens": "lots"},
+                                        {"reads": [None, "x"], "tokens": -5}]})
+    assert s4["helpers"]["count"] == 5 and s4["helpers"]["with_no_numbers"] == 5, s4
+    assert s4["helpers"]["tokens"] is None, s4
+    assert s4["efficiency"]["read_ratio"] == s0["efficiency"]["read_ratio"], s4
+    render(s4)
+
+    # no helpers key: no helpers line, and the card is exactly what it was
+    assert "helpers" not in render(s0) and "helpers" not in s0, render(s0)
+    assert "helpers" not in render(summarize({**base, "helpers": "nope"}))
+
+    print("selftest: 24 checks passed")
     return 0
 
 
