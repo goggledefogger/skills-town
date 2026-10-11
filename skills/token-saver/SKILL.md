@@ -87,7 +87,7 @@ Ten minutes, four checks:
 
 1. **Plant a needle and paraphrase the question.** Retrieval that only works when you already know the file's wording is a slower `grep`. The paraphrase leg has to be able to fail, or the test proves nothing
 2. **Try the boring verbs.** Summarize, review, explain. The most common asks are the most likely to bypass a relevance filter
-3. **Check the cost direction, not just the magnitude.** An always-on ruleset is re-sent as input on every call. One published benchmark shows a 42-75% saving on Claude reversing to 26-39% *more expensive* on reasoning models for exactly this reason
+3. **Check the cost direction, not just the magnitude.** An always-on ruleset is re-sent as input on every call. Ponytail's own [cost verification](https://github.com/DietrichGebert/ponytail/blob/main/benchmarks/results/2026-06-17-cost-verification.md) (2026-06-17) measured a 42-75% saving on Claude Haiku, Sonnet and Opus reversing to 26% more expensive on gpt-5.4-mini and 39% more expensive on gpt-5.5, for exactly this reason
 4. **Prefer the thing with receipts.** A measured range with a published method, especially one whose authors corrected their own headline downward, outranks any asserted percentage
 
 Safe, careful authorship says nothing about whether the algorithm works. The skill audited here had no network calls, skipped `.env` and secret-named files, and escaped injection markers in its output. Its selector still missed the answer.
