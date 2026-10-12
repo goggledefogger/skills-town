@@ -1,5 +1,8 @@
 # What changed
 
+## 1.8.2
+Rule 2 now says when a cheaper model is a real saving (checkable output, short report, the rerun counts) and to check a cheap tier's large-prompt price first; the helper block asks a helper that stopped early to say so instead of reporting done. Nothing here names a model or vendor.
+
 ## 1.8.1
 Corrected a citation in the adoption checklist: the cost-reversal figures now link to the benchmark they came from.
 

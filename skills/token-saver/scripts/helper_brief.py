@@ -33,8 +33,9 @@ HELPER_BLOCK = (
     "(rg -n or grep -n), then read only the span you need, and take a second "
     "bounded read before you ever load a whole file. Never retry a token or "
     "usage-limit failure. Correctness outranks saving: on anything consequential, "
-    "read fully and say so. In your summary, name what you did not read, and give "
-    "bytes read against the file's total for each narrow read, or say unavailable."
+    "read fully and say so. In your summary, name what you did not read, give "
+    "bytes read against the file's total for each narrow read, or say unavailable, "
+    "and if you stopped before the job was done, say so rather than reporting it done."
 )
 
 COMMAND_MARKER = "<command-name>/token-saver"  # also covers /token-saver:token-saver[-report]

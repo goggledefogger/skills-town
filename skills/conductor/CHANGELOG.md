@@ -1,5 +1,8 @@
 # What changed
 
+## 1.1.0
+Haiku now takes summarizing, extraction, sorting and triage, and parsing test or command output, not only search and reads; the brief says what the small model is good at (bounded, checkable, short report) and what stays on Sonnet and Opus (edits, review, security, judgment), how to brief around its stop-early and unchecked-done habits, and when a chain is cheaper done in the chat than fanned out.
+
 ## 1.0.8
 Briefs carry Token Saver's helper block when that skill is on, and the report shows each helper's token count when the host reports one.
 
