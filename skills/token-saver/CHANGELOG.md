@@ -1,5 +1,8 @@
 # What changed
 
+## 1.8.3
+The report card now says why an F happened. An F earned by reading too much says how much was read; the 'something went wrong (see safety)' wording is kept for an F forced by an incident or a retry, so the grade line and the safety line never contradict each other.
+
 ## 1.8.2
 Rule 2 now says when a cheaper model is a real saving (checkable output, short report, the rerun counts) and to check a cheap tier's large-prompt price first; the helper block asks a helper that stopped early to say so instead of reporting done. Nothing here names a model or vendor.
 

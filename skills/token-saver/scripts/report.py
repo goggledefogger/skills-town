@@ -143,10 +143,12 @@ def summarize(ledger: dict) -> dict:
         risk, why = "CLEAN", "no corrections, retries, or incidents recorded"
 
     # --- efficiency grade: mechanical, and refuses when it has no ratio ---
+    forced = False
     if risk == "UNSCORED" or ratio is None:
         grade, basis = "UNSCORED", "no read ratio available"
     elif harmed or retries:
         grade, basis = "F", "incident or limit-retry recorded"
+        forced = True
     else:
         grade = "F"
         for cap, letter in GRADE_BANDS:
@@ -191,6 +193,7 @@ def summarize(ledger: dict) -> dict:
         "efficiency": {
             "grade": grade,
             "basis": basis,
+            "forced": forced,
             "read_ratio": ratio,
             "tool_output_tokens_estimated": (tool_bytes // BYTES_PER_TOKEN) if tool_bytes else None,
             "bytes_read": read_bytes if scorable else None,
@@ -216,8 +219,13 @@ def render(s: dict) -> str:
 
     if e["grade"] == "UNSCORED":
         grade_line = "not graded — nothing was measured, so no credit claimed"
-    elif e["grade"] == "F":
+    elif e["grade"] == "F" and e["forced"]:
         grade_line = "F — something went wrong, so no efficiency credit (see safety)"
+    elif e["grade"] == "F":
+        # found live 2026-10-13: a clean session that read most of its files got the
+        # incident wording above, pointing at a safety line that said nothing went wrong
+        read_pct = round(e["read_ratio"] * 100)
+        grade_line = f"F — read {read_pct}% of the file content, so no efficiency credit"
     else:
         skipped_pct = round((1 - e["read_ratio"]) * 100)
         grade_line = f"{e['grade']} — read just what it needed, skipping {skipped_pct}% of the file content"
@@ -457,7 +465,24 @@ def selftest() -> int:
     assert s7["efficiency"]["cost_avoided_usd_estimated"] == round(500 / 4 / 1_000_000 * 10.0, 4), s7
     assert "helpers" not in render(summarize({**base, "helpers": "nope"}))
 
-    print("selftest: 28 checks passed")
+    # negative control: an F earned by reading too much says so, and never blames an
+    # incident the safety line denies (found live 2026-10-13)
+    s8 = summarize({"used": True, "corrections": 0, "incidents": [], "helpers": [],
+                    "calls": [{"model": "opus", "in_tokens": "unavailable", "out_tokens": "unavailable"}],
+                    "reads": [{"bytes_read": 700, "bytes_total": 1667},
+                              {"bytes_read": 2984, "bytes_total": 2984}]})
+    assert s8["efficiency"]["grade"] == "F" and not s8["efficiency"]["forced"], s8
+    c8 = render(s8)
+    assert "read 79% of the file content" in c8 and "something went wrong" not in c8, c8
+    assert "clean" in c8, c8
+    # and an F forced by an incident or a retry keeps the wording that points at safety
+    s9 = summarize({"used": True, "reads": [{"bytes_read": 1, "bytes_total": 1000}],
+                    "incidents": [{"severity": "harm", "note": "x"}]})
+    assert s9["efficiency"]["forced"] and "something went wrong" in render(s9), render(s9)
+    s10 = summarize({"used": True, "reads": [{"bytes_read": 1, "bytes_total": 1000}], "retries": 1})
+    assert s10["efficiency"]["forced"] and "something went wrong" in render(s10), render(s10)
+
+    print("selftest: 33 checks passed")
     return 0
 
 
