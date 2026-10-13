@@ -31,7 +31,7 @@ The one script here is a grader, not machinery: it only does arithmetic on numbe
 
 1. **Read passages, not files.** Search first (`rg -n`, `rg -l`, a scoped `grep`), then read the span you need. If the first bounded read misses, take a second bounded read. Do not fall back to loading everything, because that is the move the discipline exists to prevent.
 
-2. **Count the whole job, not the turn.** Every call counts: planning, selecting, answering, verifying, repairing. Moving work to a subagent, a cheaper model, or another host is not a saving unless the combined total falls. If a number is not reported, write `unavailable` and do not infer one.
+2. **Count the whole job, not the turn.** Every call counts: planning, selecting, answering, verifying, repairing. Moving work to a subagent, a cheaper model, or another host is not a saving unless the combined total falls. Count a cheaper model's wrong answers as reruns: it pays only where the output is cheap to check. Before handing a cheap model a large context, read its price sheet, because some charge several times more above a prompt-size threshold. If a number is not reported, write `unavailable` and do not infer one.
 
 3. **Never retry a token or usage limit failure.** A limit error is not transient. Reduce the input, pick a cheaper path, or wait for the reset. Retrying turns one refusal into several.
 
@@ -39,7 +39,7 @@ The one script here is a grader, not machinery: it only does arithmetic on numbe
 
 A helper (any subagent, Agent tool call, Task, or delegated worker) starts with none of this skill. So when Token Saver is on, every brief you write to a helper carries this block verbatim, and asks the helper to send its read numbers back:
 
-> Token Saver is on for this job. Read passages, not files: search first (rg -n or grep -n), then read only the span you need, and take a second bounded read before you ever load a whole file. Never retry a token or usage-limit failure. Correctness outranks saving: on anything consequential, read fully and say so. In your summary, name what you did not read, and give bytes read against the file's total for each narrow read, or say unavailable.
+> Token Saver is on for this job. Read passages, not files: search first (rg -n or grep -n), then read only the span you need, and take a second bounded read before you ever load a whole file. Never retry a token or usage-limit failure. Correctness outranks saving: on anything consequential, read fully and say so. In your summary, name what you did not read, give bytes read against the file's total for each narrow read, or say unavailable, and if you stopped before the job was done, say so rather than reporting it done.
 
 This is the portable mechanism. It works on every agent.
 

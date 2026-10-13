@@ -1,6 +1,6 @@
 ---
 name: conductor
-description: "Run this chat as the planner on a strong model and hand the work to the cheapest helper that can do it well: Haiku to search and read, Sonnet to build what is already decided, Opus for the hard parts and review. Use when you want a big model's judgment without paying big-model prices for every step."
+description: "Run this chat as the planner on a strong model and hand the work to the cheapest helper that can do it well: Haiku to search, read, sort and summarize, Sonnet to build what is already decided, Opus for the hard parts and review. Use when you want a big model's judgment without paying big-model prices for every step."
 license: MIT
 disable-model-invocation: true
 ---
@@ -28,11 +28,16 @@ The conversation above you is the brief. Restate the goal and where things stand
 | Work | Model |
 |---|---|
 | Searching, reading many files, gathering facts, bulk sweeps | `haiku` |
-| Building or editing code that is already specified, routine writing | `sonnet` |
-| Hard or ambiguous pieces, debugging that stalled, reviewing helpers' work | `opus` |
+| Summarizing logs, diffs, transcripts or long text that is not already in this chat; pulling facts into a fixed shape; sorting, labelling and triage; parsing test or command output; short routine writing whose shape you can check (length, format, fixed fields) | `haiku` |
+| Building or editing code that is already specified, writing that needs judgment about what to say | `sonnet` |
+| Hard or ambiguous pieces, debugging that stalled, reviewing helpers' work, anything touching security or money (this row wins over the Sonnet row) | `opus` |
 | Planning, deciding, talking to the user, the final check | you |
 
 Start a helper with the Agent tool and set its `model` to the row above. When unsure between two rows, pick the cheaper one and step up only if the result shows it was not enough.
+
+The test for the two Haiku rows is the same: the job is bounded, one task with a short report back, and you can check the answer cheaply when it lands (a path exists, a count matches, a grep agrees). That is the shape the small model handles well. Haiku finds and quotes; it does not decide what a source means. Keep off Haiku any job where the answer is itself the judgment: editing code, deciding a design, reviewing another helper, security, or weighing primary sources. On Anthropic's own benchmarks Haiku trails Sonnet by a wide margin on hard agentic coding, and nobody has shown it reviewing well. So edits stay on Sonnet and review stays on Opus until the evidence changes. Text already in this chat you summarize yourself: it is cached here, and a helper would read it cold.
+
+Haiku has 2 known habits to brief around. At low effort it can stop early on a long task, and at low or medium effort, which is its default, it can report work as done without having checked it. So a Haiku brief is short and single-purpose, says exactly what done looks like, and asks the helper to name what it checked and what it did not. Give it a bounded set of files, not a whole tree, and check the model's price sheet before handing it a large context: a small model's large prompts can cost several times its headline rate. When a Haiku result comes back thin, stopped early, or answers a different question, tighten the brief once. If your host lets you raise a helper's effort, do that before stepping up a model. If it misses again, step up to Sonnet and say so with the retry line below. A Haiku finding you are about to act on gets checked by you or a stronger helper, never by another Haiku.
 
 ## How to hand off
 
@@ -50,7 +55,7 @@ The user should always be able to see who is working. A helper's work happens ou
 
 | Badge | Who |
 |---|---|
-| 🟢 **Haiku** | fast and cheapest: search, read, sweep |
+| 🟢 **Haiku** | fast and cheapest: search, read, sweep, sort, summarize |
 | 🔵 **Sonnet** | mid-price: build what is decided |
 | 🟣 **Opus** | strong: hard parts and review |
 | 🧭 **Conductor** | you: planning, deciding, checking |
@@ -76,6 +81,7 @@ Keep the cards to these lines. No extra decoration, no card for a single quick r
 ## Keep it simple
 
 - A one-line answer, a quick question, or a small edit you can see whole: do it yourself. Starting a helper costs more than a small job
+- Helpers pay off on fan-out: several independent reads or builds at once. A single chain of dependent steps is usually cheaper done here than handed off one step at a time. Every hand-off re-sends the brief and reads the summary back
 - Do not hand off anything the user asked you to decide or judge
 - Check helpers' work before you call it done: read the diff, run the thing, or ask an `opus` helper to review it. A helper saying it finished is not proof
 

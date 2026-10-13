@@ -31,7 +31,7 @@
     {
       "name": "conductor",
       "source": "./skills/conductor",
-      "version": "1.0.8",
+      "version": "1.1.0",
       "license": "MIT",
       "description": "Run this chat as the planner on a strong model and hand the work to the cheapest helper that can do it well: Haiku to search and read, Sonnet to build what is already decided, Opus for the hard parts and review."
     },
@@ -45,7 +45,7 @@
     {
       "name": "token-saver",
       "source": "./skills/token-saver",
-      "version": "1.8.1",
+      "version": "1.8.2",
       "license": "MIT",
       "description": "Cuts token spend with three rules: read passages not files, count every call in the job, never retry a usage-limit failure. Use when a session gets expensive or before adopting an efficiency skill."
     }
