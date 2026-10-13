@@ -14,9 +14,9 @@ const has = (suffix) => existsSync(`${dir}/commands/${id}-${suffix}.md`);
 
 const T = 'TODO';
 const title = id[0].toUpperCase() + id.slice(1).replace(/-/g, ' ');
-// icon: one inline SVG in 20-unit coordinates, stroke="currentColor" stroke-width 1.5, with its viewBox
-// trimmed to the drawing plus stroke (Token Saver's is "2.65 1.95 14.7 14.7"), so it reads at the app tiles'
-// weight on the rail's white coin. Check it in the Astrolabe checkout: node dashboard/dev/icon-fit.js --svg '<svg ...>'
+// icon: one inline SVG in 20-unit coordinates, stroke="currentColor" at the stroke width the catalog's other
+// icons use, with its viewBox trimmed to the drawing plus stroke so it reads at the app tiles' weight on the
+// rail's white coin. The Astrolabe checkout prints the box to use: node dashboard/dev/icon-fit.js --svg '<svg ...>'
 const ritual = { id, label: title, icon: T, target: T, model: T, phrase: T };
 if (has('report')) { ritual.activePhrase = T; }
 ritual.command = `/${id}`;

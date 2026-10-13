@@ -28,11 +28,11 @@ personal data, no half-finished work, works for someone who isn't the author.
 4. **List it in the Astrolabe Store** (optional). Run `node scripts/catalog-listing.mjs <skill-id>` and
    paste its output into a PR against `sbd-astrolabe/dashboard/app/market-catalog.json`, labelled
    `store-listing`, filling in each `TODO`. The icon is the one field with a shape rule: one inline SVG in
-   20-unit coordinates, `stroke="currentColor"`, stroke-width 1.5, and its `viewBox` trimmed to the drawing
-   plus its stroke (Token Saver's is `2.65 1.95 14.7 14.7`). It sits at 26px on a white 36px coin beside app
+   20-unit coordinates, `stroke="currentColor"` at the stroke width the catalog's other icons use, and its
+   `viewBox` trimmed to the drawing plus its stroke. It sits at 26px on a white 36px coin beside app
    tiles that fill the middle two thirds of their box, so a `0 0 20 20` box with air around the drawing reads
    a size smaller than its neighbours. In the Astrolabe checkout, `node dashboard/dev/icon-fit.js --svg '<svg ...>'`
-   prints a one-line fix, and its suite fails a listing whose icon fills under 90% of its box. The rest of the
+   prints the box to use, and its suite fails a listing whose icon fills under 90% of its box. The rest of the
    listing rules are in Astrolabe's `docs/MARKETPLACE.md`, "Submission Bundles".
 
 ## Update a skill
