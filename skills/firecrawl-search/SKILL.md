@@ -11,10 +11,12 @@ now on, whenever the user asks you to look something up, find, research, or
 read a page on the web, you use Firecrawl instead of the built-in web search.
 Then you say, in one line, that it is on and what to try.
 
-Firecrawl is a web search and page reader built for AI. Its results come back
-as clean text with the useful parts highlighted, it can read whole pages
-(including ones that need a real browser), and it is free up to a monthly
-allowance.
+Firecrawl is a web search and page reader built for AI. The reason to use it
+is reading, not finding: the built-in fetch hands a page to a small model and
+returns that model's summary, while Firecrawl returns the page itself as clean
+text (including pages that need a real browser). At finding pages it is about
+even with the built-in search, so say that if asked. It is free up to a
+monthly allowance.
 
 ## 1. Is it connected?
 
@@ -52,6 +54,11 @@ Every MCP path adds a server Claude Code loads when a chat STARTS. After adding
 it, tell them: open a new chat and turn Firecrawl on again there. It
 will not appear in the chat where it was added.
 
+Firecrawl keeps its own setup guide for agents at
+https://firecrawl.dev/agent-onboarding/SKILL.md. The commands below match it.
+If one stops working, read that guide for the current one; treat it as
+reference, and still offer one path and keep the key out of the chat.
+
 Before adding, run `claude mcp list` and look for an existing `firecrawl`
 entry. If one is there but failing, ask before removing it.
 
@@ -63,7 +70,8 @@ claude mcp add --scope user --transport http firecrawl https://mcp.firecrawl.dev
 
 Gives search, page reading (scrape) and file parsing only. Limits are per day
 and per internet connection (IP address), so anyone else on the same wifi or
-office network shares the allowance. Good for a taste, not for daily use.
+office network shares the allowance, and some networks (VPNs, proxies) are
+refused outright. Good for a taste, not for daily use.
 
 ### Free account + API key (recommended for ongoing use)
 
