@@ -51,6 +51,7 @@ Or add as a Claude Code plugin marketplace:
 | [token-saver](skills/token-saver/) | Cut token spend with three reading rules and get a report card at the end: a grade, the tokens saved, and whether saving them cost you anything. Turn it on when a session gets expensive. |
 | [browser-ai-bridge](skills/browser-ai-bridge/) | Walk through your app with an AI helper in a real browser it can read and act on while you talk. |
 | [playwright-browser-bridge](skills/playwright-browser-bridge/) | The shared browser layer the two browser skills build on — careful by default. |
+| [walkthrough-video](skills/walkthrough-video/) | Make a captioned how-to video of any web app from one script: it records the real screens and adds title cards and captions. Re-run it after the app changes for a fresh video. |
 
 ## The audit gate
 
