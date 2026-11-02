@@ -52,7 +52,7 @@
     {
       "name": "walkthrough-video",
       "source": "./skills/walkthrough-video",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "license": "MIT",
       "description": "Make a captioned how-to video of any web app from one JSON script: real screens recorded in headless Chrome, with title cards and captions rendered around them. Re-run it after the app changes for a fresh video."
     }
