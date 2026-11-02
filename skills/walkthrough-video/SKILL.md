@@ -10,6 +10,8 @@ One file, `walkthrough.json`, describes the video: how to start the app, the sce
 
 Needs Node 22+, ffmpeg and Chrome (or `CHROME=<path>`). HyperFrames runs through `npx` only for `--render`; nothing installs into the app.
 
+Built on [HyperFrames](https://github.com/heygen-com/hyperframes), HeyGen's open-source (Apache-2.0) tool that renders HTML into video: it draws the title cards and captions and makes the final MP4. Recording runs on headless Chrome.
+
 Before the first recording, run `node <this skill>/scripts/walkthrough.ts --check`. It names anything missing and how to add it; pass that on in one line and offer to run the install. If Node itself errors on the `.ts` file, it is older than 22.18: say so and point at nodejs.org.
 
 ## Start or continue
