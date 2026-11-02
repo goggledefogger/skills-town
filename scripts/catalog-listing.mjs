@@ -40,13 +40,15 @@ const listing = {
   cta: 'Get this skill',
   install: {
     preview: `Read the skill first: https://github.com/goggledefogger/skills-town/tree/main/${dir}`,
+    // the Store adds the skill for every assistant first, then the Claude plugin when Claude Code is there
     steps: [
-      'add the plugin marketplace goggledefogger/skills-town and turn on auto-update for it',
-      `install ${id} from it`,
-      T,
+      `add the ${title} skill to your notes folder, so every assistant has it`,
+      `if Claude Code is here, also add the plugin marketplace goggledefogger/skills-town, turn on auto-update for it and install ${id}`,
+      `pin the ${title} button to your Astrolabe chat ribbon`,
     ],
+    marketplace: 'goggledefogger/skills-town',
     updates: 'Auto-updates once that marketplace has it switched on; on any other agent, npx skills update brings the next version.',
-    touches: T,
+    touches: `Adds the skill to your notes folder's skills, plus the Claude Code plugin if Claude Code is here, and a card to your Astrolabe rituals shelf. ${T}`,
     ritual,
   },
 };

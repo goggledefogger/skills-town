@@ -35,6 +35,11 @@ personal data, no half-finished work, works for someone who isn't the author.
    prints the box to use, and its suite fails a listing whose icon fills under 90% of its box. The rest of the
    listing rules are in Astrolabe's `docs/MARKETPLACE.md`, "Submission Bundles".
 
+   Every listing also clears **Every listing, every install** in that same file before it goes live:
+   the skill works on any assistant, the store installs what it needs, the skill names anything still
+   missing on its first run, it credits what it is built on, and a real sandbox install is read to its
+   last line.
+
 ## Update a skill
 
 The version string is the release. Claude Code only offers an update when the version changes, so a
