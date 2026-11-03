@@ -59,7 +59,7 @@
     {
       "name": "scrappy-video-understanding",
       "source": "./skills/scrappy-video-understanding",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "license": "MIT",
       "description": "Scrappy progressive multi-pass video understanding: accepts any link or media file, extracts metadata, keyframes, contact sheets, subtitles, and audio."
     }

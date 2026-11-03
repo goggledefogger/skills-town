@@ -27,6 +27,9 @@ Built on [yt-dlp](https://github.com/yt-dlp/yt-dlp) (Unlicense) for streaming me
 
 When the user provides a video (YouTube link, Google Drive link, Twitter/X, TikTok, Loom, Vimeo, or local file), follow this 3-step conversational pattern:
 
+### Step 0: Start From the File on Disk
+Videos live on disk and stay there. If the member mentions a video with no path or link, ask one question: where is the file? In the Astrolabe dashboard a dropped file arrives as a line "(I attached a file; it is saved at <path>)" with its size and length; use that path directly. Every local pass runs on the file in place. The script never copies a local input; only derived files go to `~/.cache/scrappy-video/<slug>/`.
+
 ### Step 1: Run Instant Local Reconnaissance (1-2s, 0 Video Bytes)
 Run the leanest pass immediately:
 ```bash
@@ -40,8 +43,8 @@ Do not overwhelm the user with long text. Give a punchy, 3-bullet breakdown:
 2. **Recommended Local vs Cloud Split**:
    - **Local Execution**: Probing, zero-download subtitle harvesting, audio extraction, and visual 4x3 contact sheet generation (drastically cuts token usage and bandwidth).
    - **Cloud AI (and which model)**:
-     - **Claude 3.5 Sonnet / Opus**: If transcripts are present and the goal is analytical synthesis, architecture reasoning, code extraction, or editorial critique.
-     - **Gemini 1.5 Pro / 2.0 Flash**: If the video is long (>30m) and needs native multimodal temporal grounding or direct video upload into its 1M-2M context window.
+     - **A current Claude model**: If transcripts are present and the goal is analytical synthesis, architecture reasoning, code extraction, or editorial critique.
+     - **A current Gemini model with a long context window**: If the video is long (>30m) and needs native multimodal temporal grounding or direct video upload.
      - **100% Local**: If privacy or offline operation is required (using local Qwen2.5-VL 3B + local Whisper on Mac; guarded on Pi).
    - **Why**: Local extraction distills the video into high-signal artifacts (clean text + contact sheet) for free; Cloud AI performs deep synthesis without melting laptop memory or crashing a Raspberry Pi.
 
@@ -49,6 +52,19 @@ Do not overwhelm the user with long text. Give a punchy, 3-bullet breakdown:
 Before escalating to deep processing or heavy downloading, ask:
 1. **Goal**: *"What's your primary goal with this video? (e.g. quick takeaway summary, timestamped chapter outline, exact code/slide transcription, or deep analytical critique?)"*
 2. **Tools & Privacy**: *"Do you prefer keeping this 100% local, or would you like me to feed the distilled transcript and contact sheet to Cloud AI (Claude / Gemini) for synthesis?"*
+
+## Before sending the video anywhere
+
+The skill never uploads the file to Drive, Gemini, NotebookLM or any service off the machine on its own. In order:
+
+1. Prefer sending the distilled artifacts (`contact_sheet.jpg`, the transcript and the report) over the whole file.
+2. If the whole file is genuinely needed, first check Google Drive for an existing copy. With the Google Drive connector, call `search_files` with a query like `title contains '<file name without extension>' and mimeType contains 'video/'`. Each result carries `title` and `fileSize` (bytes). Size is not a query operator, so compare `fileSize` to the local file size on the results. A match on name and size means reuse that copy's link.
+3. If there is no match, ask one question that names the destination and the size, and upload only after an explicit yes.
+4. If no Drive connector is present, say so and ask.
+
+## Private links
+
+If a link fails with 401, 403 or 404, the script prints one line and no traceback: "That link is private or not found. If it is yours, sign in (for GitHub: gh auth login) or download it and tell me where the file is." For GitHub release assets (`github.com/<owner>/<repo>/releases/download/<tag>/<file>` or `api.github.com/repos/.../releases/assets/<id>`) the script uses the member's `gh` sign-in when `gh auth status` succeeds. It prints the asset size first. Over 200 MB it stops and asks for a yes; after the yes, rerun with `--yes`. The download lands in the output folder as `source.<ext>` and the pipeline then runs on it as a local file.
 
 ## Progressive Scrappy Passes
 
@@ -119,9 +135,43 @@ Options:
 - `--tools`: Browse the open tools catalog, showing host install status and install instructions.
 - `--register-tool <name>`: Register a new open tool in the learning registry (`custom_tools.json`).
 - `--detector <auto|ffmpeg|scenedetect>`: Scene cut detection engine.
+- `--yes`: The member said yes to a GitHub release download over 200 MB.
 - `--max-frames <N>`: Maximum keyframes to retain in full pass (default 16).
 - `--check`: Run dependency health check and print installation instructions if anything is missing.
 - `--selftest`: Run hermetic parser test suite.
+
+## Outputs
+
+Everything is written to `~/.cache/scrappy-video/<slug>/` (or `--out`). Nothing is written next to the input. You never need to read the script to know what exists.
+
+| File | When | What it is |
+|---|---|---|
+| `summary.json` | every stage | All results in one JSON file (fields below) |
+| `report.md` | `quick` and `full` | Markdown report: overview, chapters, contact sheet, first 25 transcript lines |
+| `report.html` | `quick` and `full` | The same report as one self-contained page that reads on a phone: title, source, length, contact sheet, chapters, transcript (collapsed), key frames, folder path |
+| `transcript.txt` | when captions exist | Clean `[MM:SS]` transcript, always `.txt` |
+| `transcript.json` | YouTube links, when the youtube-transcript skill ran | Raw transcript data |
+| `captions.<lang>.vtt` or `.srt` | non-YouTube links with captions | Raw captions from yt-dlp |
+| `embedded_subtitles.srt` | local files with a subtitle stream | Raw embedded subtitles |
+| `contact_sheet.jpg` | `quick` and `full`, video only | One 4x3 grid image of the whole video |
+| `frames/` | `full` only | Keyframes: `scene_NNN.jpg`, `interval_NNN.jpg`, or PySceneDetect images |
+| `audio_16k.mp3` | `full`, when there is audio and no captions | 16 kHz mono audio for transcription; the script does not transcribe it itself |
+| `source_stream.mp4` | `quick` and `full` on a web link | The downloaded low-resolution stream (480p quick, up to 720p full) |
+| `source.<ext>` | GitHub release assets fetched with `gh` | The downloaded file; the pipeline runs on it as a local file |
+
+Top-level fields of `summary.json`:
+
+- `metadata`: title, input, is_url, duration (seconds), duration_str, width, height, resolution, fps, video_codec, audio_codec, has_audio, has_video, subtitles_available (language codes), chapters (title, start, end), and description for web links
+- `subtitles`: has_subtitles, source (where the captions came from), text_path (the clean transcript.txt), raw_path
+- `audio`: path of `audio_16k.mp3`, or null
+- `frames`: frames_dir, frame_count, frames (paths, at most `--max-frames`), contact_sheet (path or null), detector_used
+- `working_dir`: the output folder
+- `stage`: the stage that ran
+- `detector`: the scene detector that was requested
+- `device_profile`: host name, arch, RAM, tier, capabilities and limits
+- `split_recommendation`: local_execution steps, cloud_ai (recommended_models, why), questions_to_confirm
+
+`probe` and `subs` stages write only `summary.json` plus any transcript files; `frames` is empty and `audio` is null there.
 
 ## Running on Constrained Devices (Raspberry Pi & Edge SBCs)
 
@@ -184,4 +234,4 @@ python3 .agents/skills/scrappy-video-understanding/scrappy_video.py --register-t
 2. **Visual Contact Sheet**: show the `contact_sheet.jpg` path the script printed (working files live in `~/.cache/scrappy-video/<slug>/`, never in the user's notes). If your surface can only show images from inside the notes folder, copy just that one image there.
 3. **Timeline & Chapters**: Bulleted list with `[MM:SS]` timestamps for key topic shifts.
 4. **Key Quotes / Transcripts**: Exact quotes where actionable advice, numbers, or decisions were made.
-5. **Path to Artifacts**: Point to the generated `report.md`, `summary.json`, and extracted frames directory.
+5. **Path to Artifacts**: Point to the generated `report.html` (opens on a phone), `report.md`, `summary.json`, and extracted frames directory.
