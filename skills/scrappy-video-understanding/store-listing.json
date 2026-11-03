@@ -41,7 +41,7 @@
     "marketplace": "goggledefogger/skills-town",
     "eta": 30,
     "updates": "Auto-updates once that marketplace has it switched on; on any other agent, npx skills update brings the next version.",
-    "touches": "Adds the skill to your notes folder's skills, plus the Claude Code plugin if Claude Code is here, and a card to your Astrolabe rituals shelf. Reads media files and streams, writes extracted frames and transcripts into a local working directory. Writes nothing into your notes.",
+    "touches": "Adds the skill to your notes folder's skills, plus the Claude Code plugin if Claude Code is here, and a card to your Astrolabe rituals shelf. Adds ffmpeg and uv to the .local/bin folder in your home folder if they are missing. Reads media files and streams, and writes extracted frames and transcripts into .cache/scrappy-video in your home folder. Writes nothing into your notes.",
     "ritual": {
       "id": "scrappy-video-understanding",
       "label": "Scrappy Video",
