@@ -1,0 +1,15 @@
+{
+  "tools": {
+    "sox": {
+      "name": "sox",
+      "category": "audio_processing",
+      "bin": "sox",
+      "license": "Open Source",
+      "url": "https://sox.sourceforge.net",
+      "description": "Swiss Army knife of sound processing",
+      "install": "brew install sox",
+      "priority": 10,
+      "learned_at": "2026-11-02"
+    }
+  }
+}

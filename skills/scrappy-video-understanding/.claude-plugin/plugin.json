@@ -1,0 +1,9 @@
+{
+  "name": "scrappy-video-understanding",
+  "description": "Scrappy progressive multi-pass video understanding: accepts any link or media file, extracts metadata, keyframes, contact sheets, subtitles, and audio.",
+  "author": {
+    "name": "goggledefogger"
+  },
+  "license": "MIT",
+  "version": "1.0.0"
+}

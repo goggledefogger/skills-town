@@ -1,0 +1,56 @@
+{
+  "id": "scrappy-video-understanding",
+  "stage": "staged",
+  "audience": [
+    "danny"
+  ],
+  "category": "skills",
+  "title": "Scrappy Video Understanding",
+  "label": "Scrappy Video Understanding, a skill for any assistant",
+  "creator": "Danny",
+  "agent": "Roy",
+  "creatorRole": "who teaches the course Astrolabe came out of",
+  "verb": "Made by",
+  "promise": "Scrappy multi-pass video understanding: takes any video link or file, grabs keyframes and contact sheets, extracts subtitles/audio, and analyzes scenes.",
+  "minutes": "a skill for any assistant",
+  "price": "Free",
+  "hero": {
+    "src": "/store-art/scrappy-video-understanding.jpg",
+    "alt": "A video timeline with contact sheet, extracted frames, subtitle text, and an understanding summary card",
+    "from": "https://github.com/goggledefogger/skills-town/blob/main/skills/scrappy-video-understanding/docs/hero.jpg",
+    "crop": "1920x1080+0+0",
+    "version": "1.0.0"
+  },
+  "changes": [
+    {
+      "version": "1.0.0",
+      "note": "First release."
+    }
+  ],
+  "desc": "Free, and part of the members' skills library. Resourceful and efficient video understanding without fragile setups or heavy GPU requirements. Tries the fastest, leanest pass first: instant subtitle harvesting via yt-dlp with zero video download, rapid metadata probe, and single-glance 4x3 contact sheets, escalating to deep scene-cut extraction only where needed. Accepts YouTube, X/Twitter, TikTok, Loom, Vimeo, direct web links, or local video/audio files. Built on yt-dlp (Unlicense) and ffmpeg (LGPL/GPL).",
+  "bio": "Danny teaches the course Astrolabe came out of. He built this for quick, versatile video analysis across any platform or local recording.",
+  "cta": "Get this skill",
+  "plugin": "scrappy-video-understanding@skills-town",
+  "install": {
+    "preview": "Read the skill first: https://github.com/goggledefogger/skills-town/tree/main/skills/scrappy-video-understanding",
+    "steps": [
+      "add the Scrappy Video Understanding skill to your notes folder, so every assistant has it",
+      "if Claude Code is here, also add the plugin marketplace goggledefogger/skills-town, turn on auto-update for it and install scrappy-video-understanding",
+      "pin the Scrappy Video button to your Astrolabe chat ribbon"
+    ],
+    "marketplace": "goggledefogger/skills-town",
+    "eta": 30,
+    "updates": "Auto-updates once that marketplace has it switched on; on any other agent, npx skills update brings the next version.",
+    "touches": "Adds the skill to your notes folder's skills, plus the Claude Code plugin if Claude Code is here, and a card to your Astrolabe rituals shelf. Reads media files and streams, writes extracted frames and transcripts into a local working directory. Writes nothing into your notes.",
+    "ritual": {
+      "id": "scrappy-video-understanding",
+      "label": "Scrappy Video",
+      "icon": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"2\" y=\"4\" width=\"20\" height=\"16\" rx=\"3\"/><polygon points=\"10 8 16 12 10 16 10 8\" fill=\"currentColor\" fill-opacity=\"0.3\"/><line x1=\"2\" y1=\"8\" x2=\"22\" y2=\"8\" stroke-dasharray=\"2 2\"/><line x1=\"2\" y1=\"16\" x2=\"22\" y2=\"16\" stroke-dasharray=\"2 2\"/></svg>",
+      "target": "active",
+      "phrase": "Understand this video or link: inspect metadata, extract transcript/subtitles, grab keyframes, and give me a full breakdown.",
+      "command": "/scrappy-video",
+      "accent": "blue",
+      "desc": "Scrappy multi-pass video understanding: takes any video link or file, grabs keyframes and contact sheets, pulls audio/subtitles, and explains what happened."
+    }
+  }
+}
