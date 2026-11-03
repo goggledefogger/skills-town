@@ -93,7 +93,7 @@ def register_custom_tool(name: str, category: str, bin_name: str, description: s
         "description": description,
         "install": install or "",
         "priority": 10,
-        "learned_at": "2026-11-02",
+        "learned_at": __import__("datetime").date.today().isoformat(),
     }
     custom.setdefault("tools", {})[name] = tool_entry
     CUSTOM_REGISTRY.write_text(json.dumps(custom, indent=2), encoding="utf-8")
@@ -222,7 +222,7 @@ def get_device_profile() -> dict:
             "Keep frame resolution <= 480px to protect memory and SD card I/O" if is_constrained else "Keep frame resolution <= 768px for VLM context budget",
             "Avoid full video re-encoding on CPU; use stream-copy or skip-frame" if is_constrained else "Standard hardware acceleration available",
             "Do NOT run local vision-language models (>2B) or deep reasoners locally" if is_constrained else "Local VLM allowed (qwen2.5-vl:3b or moondream with thinking=off)",
-            "Delegate heavy Whisper / VLM passes to upstream Mac/Roy via LAN or Tailscale" if is_constrained else "Local Whisper inference supported",
+            "Delegate heavy Whisper / VLM passes to a stronger machine on your network" if is_constrained else "Local Whisper inference supported",
         ]
     }
     return profile
@@ -265,7 +265,7 @@ def print_profile_report() -> int:
         print("\n💡 RASPBERRY PI / EDGE ADVISORY:")
         print("   This device can run probe, subtitle harvesting, audio extraction, and low-res")
         print("   contact sheet generation quickly and locally. If deep multimodal vision or heavy")
-        print("   transcription is needed, delegate the work to an upstream Mac/Roy node via Tailscale.")
+        print("   transcription is needed, delegate the work to a stronger machine on your network.")
 
     print("=" * 75 + "\n")
     return 0
@@ -501,7 +501,7 @@ def harvest_subtitles(input_target: str, out_dir: Path) -> dict:
     res = {"has_subtitles": False, "source": None, "text_path": None, "raw_path": None}
 
     if is_url(input_target):
-        # 1. For YouTube: leverage Danny's public youtube-transcript skill first (zero video bytes, API + fallback)
+        # 1. For YouTube: use the public youtube-transcript skill first (zero video bytes, API + fallback)
         if any(d in input_target.lower() for d in ("youtube.com", "youtu.be")):
             yt_runner = find_youtube_transcript_runner()
             if yt_runner:
@@ -978,6 +978,25 @@ Today we are building an agent skill.
     assert is_url("http://example.com/video.mp4")
     assert not is_url("/path/to/video.mp4")
     assert not is_url("video.mp4")
+
+    global CUSTOM_REGISTRY
+    reg = load_tool_registry()
+    assert reg["tools"], "open tools catalog is empty"
+    for key, tool in reg["tools"].items():
+        assert tool.get("name") and tool.get("category"), f"catalog entry {key} lacks name or category"
+
+    saved = CUSTOM_REGISTRY
+    with tempfile.TemporaryDirectory() as tmp:
+        CUSTOM_REGISTRY = Path(tmp) / "custom_tools.json"
+        try:
+            register_custom_tool("selftest-tool", "audio_processing", "selftest-bin", "selftest entry")
+            tool = load_tool_registry()["tools"]["selftest-tool"]
+            assert tool["bin"] == "selftest-bin" and tool["learned_at"]
+        finally:
+            CUSTOM_REGISTRY = saved
+
+    profile = get_device_profile()
+    assert isinstance(profile.get("is_constrained"), bool) and profile.get("limits")
     print("selftest: PASSED")
     return 0
 

@@ -141,7 +141,7 @@ When running on an edge device like Sheila's Raspberry Pi (or any machine with $
   3. **High-Resolution Transcoding**: Video downloads and processing are capped at 480p maximum.
 
 - **Upstream Delegation**:
-  When a user on a Raspberry Pi asks for deep visual understanding or heavy transcription, the edge node performs the lightweight passes (probe, subtitles, audio extraction, contact sheet), and delegates the heavy inference pass to Roy/Mac over Tailscale.
+  When a user on a Raspberry Pi asks for deep visual understanding or heavy transcription, the edge node performs the lightweight passes (probe, subtitles, audio extraction, contact sheet), and hands the heavy inference pass to a stronger machine on the same network.
 
 ## Local Model Directives (From `integrating-local-models`)
 
