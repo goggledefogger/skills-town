@@ -28,6 +28,7 @@ Optional:
 """
 
 import argparse
+import html
 import json
 import os
 import platform
@@ -48,6 +49,87 @@ def is_url(string: str) -> bool:
         return parsed.scheme in ("http", "https")
     except Exception:
         return False
+
+
+PRIVATE_LINE = ("That link is private or not found. If it is yours, sign in "
+                "(for GitHub: gh auth login) or download it and tell me where the file is.")
+BIG_DOWNLOAD_BYTES = 200 * 1024 * 1024
+
+
+class UserMessage(Exception):
+    """A plain line for the member, printed without a traceback"""
+
+
+def private_link_message(text: str) -> Optional[str]:
+    """Map a 401/403/404 style failure to the one plain line, else None"""
+    if re.search(r"\b(401|403|404)\b|Unauthorized|Forbidden|Not Found|[Pp]rivate video", text or ""):
+        return PRIVATE_LINE
+    return None
+
+
+def last_line(text: str) -> str:
+    return (text.strip().splitlines() or ["unknown error"])[-1]
+
+
+def github_release_ref(url: str) -> Optional[dict]:
+    """Recognise GitHub release asset URLs; returns repo plus tag/file or asset id.
+    A recognised shape with an unsafe segment raises the plain line"""
+    u = urllib.parse.urlparse(url)
+    parts = [urllib.parse.unquote(x) for x in u.path.split("/") if x]
+    name_ok = lambda x: re.fullmatch(r"[A-Za-z0-9._-]+", x) and x not in (".", "..")
+    if u.netloc == "github.com" and len(parts) >= 6 and parts[2:4] == ["releases", "download"]:
+        owner, repo, tag = parts[0], parts[1], parts[4]
+        if not (name_ok(owner) and name_ok(repo)) or tag.startswith("-") or re.search(r"[/?#]", tag):
+            raise UserMessage(PRIVATE_LINE)
+        return {"repo": f"{owner}/{repo}", "tag": tag, "file": "/".join(parts[5:])}
+    if u.netloc == "api.github.com" and len(parts) == 6 and parts[0] == "repos" and parts[3:5] == ["releases", "assets"]:
+        if not (name_ok(parts[1]) and name_ok(parts[2])) or not parts[5].isdigit():
+            raise UserMessage(PRIVATE_LINE)
+        return {"repo": f"{parts[1]}/{parts[2]}", "asset_id": parts[5]}
+    return None
+
+
+def fetch_github_asset(ref: dict, out_dir: Path, yes: bool = False, download: bool = True) -> Optional[Path]:
+    """Download a release asset with the member's gh sign-in; None when gh is not usable.
+    With download=False only the size is learned and printed"""
+    gh = shutil.which("gh")
+    if not gh or subprocess.run([gh, "auth", "status"], capture_output=True).returncode != 0:
+        return None
+    q = urllib.parse.quote
+    if "asset_id" in ref:
+        api = f"repos/{q(ref['repo'], safe='/')}/releases/assets/{q(ref['asset_id'])}"
+    else:
+        api = f"repos/{q(ref['repo'], safe='/')}/releases/tags/{q(ref['tag'], safe='')}"
+    res = subprocess.run([gh, "api", api], capture_output=True, text=True)
+    if res.returncode != 0:
+        raise UserMessage(private_link_message(res.stderr) or "GitHub lookup failed: " + last_line(res.stderr))
+    data = json.loads(res.stdout)
+    asset = data if "asset_id" in ref else next((a for a in data.get("assets", []) if a.get("name") == ref["file"]), None)
+    if not asset:
+        raise UserMessage(PRIVATE_LINE)
+    try:
+        size = int(asset["size"])
+    except (KeyError, TypeError, ValueError):
+        raise UserMessage("Could not learn the size of that file, so I am not downloading it.")
+    print(f"      GitHub asset {asset['name']}: {size / 1048576:.1f} MB")
+    if not download:
+        raise UserMessage(f"Not downloading at this stage (no video bytes before quick or full). The file is {size / 1048576:.0f} MB.")
+    if size > BIG_DOWNLOAD_BYTES and not yes:
+        raise UserMessage(f"That file is {size / 1048576:.0f} MB (over 200 MB). Say yes and I will download it with your GitHub sign-in (rerun with --yes).")
+    out_dir.mkdir(parents=True, exist_ok=True)
+    dest = out_dir / ("source" + (Path(asset["name"]).suffix or ".mp4"))
+    if "asset_id" in ref:
+        with open(dest, "wb") as fh:
+            run = subprocess.run([gh, "api", "-H", "Accept: application/octet-stream", api], stdout=fh, stderr=subprocess.PIPE)
+    else:
+        run = subprocess.run([gh, "release", "download", "--repo", ref["repo"], "--pattern", asset["name"],
+                              "--dir", str(out_dir), "--clobber", "--", ref["tag"]], capture_output=True)
+        if run.returncode == 0:
+            shutil.move(str(out_dir / asset["name"]), dest)
+    if run.returncode != 0:
+        err = run.stderr.decode(errors="replace")
+        raise UserMessage(private_link_message(err) or "Download failed: " + last_line(err))
+    return dest
 
 
 REGISTRY_DIR = Path(__file__).resolve().parent
@@ -432,7 +514,9 @@ def probe_media(input_target: str) -> dict:
         if not ytdlp:
             raise RuntimeError("yt-dlp is required to probe URLs. Install uv (https://docs.astral.sh/uv/) or yt-dlp.")
         cmd = [*ytdlp, "--dump-json", "--skip-download", "--no-warnings", input_target]
-        res = subprocess.run(cmd, capture_output=True, text=True, check=True)
+        res = subprocess.run(cmd, capture_output=True, text=True)
+        if res.returncode != 0:
+            raise UserMessage(private_link_message(res.stderr) or "Could not read that link: " + ((res.stderr.strip().splitlines() or ["unknown error"])[-1]))
         data = json.loads(res.stdout)
         
         meta["title"] = data.get("title") or "Unknown Title"
@@ -773,25 +857,25 @@ def build_split_recommendation(meta: dict, subs: dict, profile: dict) -> dict:
     local_steps.append("Visual keyframe sampling & single-glance 4x3 contact sheet (cuts token spend by >90%)")
 
     if is_constrained:
-        cloud_model = "Gemini 2.0 Flash or Claude 3.5 Sonnet"
+        cloud_model = "a current Gemini or Claude model"
         cloud_reason = (
             f"Host is a constrained edge device ({profile.get('device')}, {profile.get('total_ram_gb')}GB RAM). "
             "Local node handles probing, subtitles, and contact sheet generation. Offload deep synthesis and visual reasoning to Cloud AI."
         )
     elif duration > 1800:
-        cloud_model = "Gemini 1.5 Pro / 2.0 Flash"
+        cloud_model = "a current Gemini model with a long context window"
         cloud_reason = (
             f"Video is long ({meta.get('duration_str', '30m+')}). Gemini's 1M-2M token multimodal context window handles "
             "temporal video search and timestamped grounding far cheaper and faster than frame-by-frame local VLMs."
         )
     elif has_subs:
-        cloud_model = "Claude 3.5 Sonnet / Opus"
+        cloud_model = "a current Claude model"
         cloud_reason = (
             "Local pipeline already harvested clean timestamped transcript. Feed transcript + contact sheet "
             "to Claude for superior analytical critique, architecture reasoning, or structured code extraction."
         )
     else:
-        cloud_model = "Gemini 2.0 Flash or Claude 3.5 Sonnet"
+        cloud_model = "a current Gemini or Claude model"
         cloud_reason = (
             "Extract audio locally, then synthesize with Cloud AI to avoid local VLM memory thrashing."
         )
@@ -829,7 +913,7 @@ def print_split_recommendation(split_rec: dict):
     print("=" * 75 + "\n")
 
 
-def run_pipeline(input_target: str, out_dir: Path, max_frames: int = 16, stage: str = "full", detector: str = "auto") -> dict:
+def run_pipeline(input_target: str, out_dir: Path, max_frames: int = 16, stage: str = "full", detector: str = "auto", yes: bool = False) -> dict:
     """Run progressive video understanding pipeline.
     
     Stages (resourceful & lean first):
@@ -842,6 +926,13 @@ def run_pipeline(input_target: str, out_dir: Path, max_frames: int = 16, stage: 
     profile = get_device_profile()
     if profile["is_constrained"]:
         print(f"\n[Hardware Profile] Constrained/Edge device detected ({profile['device']}, {profile['total_ram_gb']}GB RAM). Enforcing edge memory guards.")
+
+    original = input_target
+    ref = github_release_ref(input_target) if is_url(input_target) else None
+    if ref:
+        fetched = fetch_github_asset(ref, out_dir, yes=yes, download=stage not in ("probe", "subs"))
+        if fetched:
+            input_target = str(fetched)
 
     print(f"\n[1/4] Probing media (Stage 1: Leanest Probe): {input_target}")
     meta = probe_media(input_target)
@@ -891,7 +982,9 @@ def run_pipeline(input_target: str, out_dir: Path, max_frames: int = 16, stage: 
             "--no-warnings",
             input_target,
         ]
-        subprocess.run(cmd, capture_output=True, text=True, check=True)
+        dl = subprocess.run(cmd, capture_output=True, text=True)
+        if dl.returncode != 0:
+            raise UserMessage(private_link_message(dl.stderr) or "Download failed: " + ((dl.stderr.strip().splitlines() or ["unknown error"])[-1]))
         local_media = str(download_target)
 
     frames_info = {"frames": [], "contact_sheet": None}
@@ -954,7 +1047,7 @@ def run_pipeline(input_target: str, out_dir: Path, max_frames: int = 16, stage: 
         f"# Video Understanding: {meta['title']}",
         "",
         "## Overview",
-        f"- **Source**: `{input_target}`",
+        f"- **Source**: `{original}`",
         f"- **Duration**: {meta.get('duration_str', 'N/A')}",
         f"- **Resolution**: {meta.get('resolution', 'N/A')} ({meta.get('fps', 'N/A')} fps)",
         f"- **Video Codec**: {meta.get('video_codec', 'N/A')}, **Audio Codec**: {meta.get('audio_codec', 'N/A')}",
@@ -966,7 +1059,7 @@ def run_pipeline(input_target: str, out_dir: Path, max_frames: int = 16, stage: 
     if meta.get("chapters"):
         report_lines.extend(["## Chapters", ""])
         for ch in meta["chapters"]:
-            m, s = divmod(int(ch["start"]), 60)
+            m, s = divmod(int(ch.get("start") or 0), 60)
             report_lines.append(f"- **`{m:02d}:{s:02d}`** {ch['title']}")
         report_lines.append("")
 
@@ -996,8 +1089,46 @@ def run_pipeline(input_target: str, out_dir: Path, max_frames: int = 16, stage: 
     ])
 
     report_md.write_text("\n".join(report_lines), encoding="utf-8")
-    print(f"\nDone! Comprehensive report written to:\n  {report_md}\n")
+    report_html = out_dir / "report.html"
+    report_html.write_text(render_report_html(summary, original, out_dir), encoding="utf-8")
+    print(f"\nDone! Comprehensive report written to:\n  {report_md}\n  {report_html}\n")
     return summary
+
+
+def render_report_html(summary: dict, source: str, out_dir: Path) -> str:
+    """Self-contained phone-friendly report page; relative links, no external CSS or JS"""
+    e = html.escape
+    meta, subs, frames = summary["metadata"], summary["subtitles"], summary["frames"]
+    out = [
+        '<!doctype html><html lang="en"><head><meta charset="utf-8">',
+        '<meta name="viewport" content="width=device-width, initial-scale=1">',
+        f"<title>{e(str(meta.get('title')))}</title>",
+        "<style>body{font:16px/1.5 system-ui,sans-serif;max-width:42rem;margin:0 auto;padding:1rem}"
+        "img{max-width:100%;height:auto}pre{white-space:pre-wrap;word-break:break-word}"
+        "summary{cursor:pointer;font-weight:600}</style></head><body>",
+        f"<h1>{e(str(meta.get('title')))}</h1>",
+        f"<p>Source: {e(source)}<br>Length: {e(str(meta.get('duration_str') or 'unknown'))}"
+        f" &middot; Size: {e(str(meta.get('resolution') or 'audio only'))}</p>",
+    ]
+    if (out_dir / "contact_sheet.jpg").exists():
+        out.append('<h2>Contact sheet</h2><img src="contact_sheet.jpg" alt="Contact sheet of the video">')
+    if meta.get("chapters"):
+        out.append("<h2>Chapters</h2><ul>")
+        for ch in meta["chapters"]:
+            m, s = divmod(int(ch.get("start") or 0), 60)
+            out.append(f"<li>{m:02d}:{s:02d} {e(str(ch['title']))}</li>")
+        out.append("</ul>")
+    if subs.get("text_path") and Path(subs["text_path"]).exists():
+        txt = Path(subs["text_path"]).read_text(encoding="utf-8", errors="replace")
+        out.append(f"<h2>Transcript</h2><details><summary>Show the transcript</summary><pre>{e(txt)}</pre></details>")
+    if frames.get("frames"):
+        out.append("<h2>Key frames</h2><ul>")
+        for f in frames["frames"]:
+            rel = os.path.relpath(f, out_dir)
+            out.append(f'<li><a href="{e(urllib.parse.quote(rel), quote=True)}">{e(rel)}</a></li>')
+        out.append("</ul>")
+    out.append(f"<p>All the files are in {e(str(out_dir))}</p></body></html>")
+    return "\n".join(out)
 
 
 def selftest():
@@ -1047,6 +1178,60 @@ Today we are building an agent skill.
     assert kinds == [("video", "h264"), ("audio", "aac")]
     assert info["streams"][0]["width"] == 1280 and info["streams"][0]["height"] == 720
 
+    with tempfile.TemporaryDirectory() as tmp:
+        fake = {"metadata": {"title": "A <b> talk", "duration_str": "01:05", "resolution": "1280x720",
+                             "chapters": [{"title": "Intro", "start": 0}]},
+                "subtitles": {"text_path": None}, "frames": {"frames": []}}
+        page = render_report_html(fake, "https://x.test/v", Path(tmp))
+        assert "A &lt;b&gt; talk" in page and "<b> talk" not in page and "Intro" in page
+        assert "contact_sheet.jpg" not in page
+        (Path(tmp) / "contact_sheet.jpg").write_bytes(b"x")
+        assert 'src="contact_sheet.jpg"' in render_report_html(fake, "v.mp4", Path(tmp))
+
+    assert private_link_message("ERROR: HTTP Error 403: Forbidden") == PRIVATE_LINE
+    assert private_link_message("HTTP Error 404: Not Found") == PRIVATE_LINE
+    assert private_link_message("network unreachable") is None
+    ref = github_release_ref("https://github.com/acme/demo/releases/download/v1.0/clip%20one.mp4")
+    assert ref == {"repo": "acme/demo", "tag": "v1.0", "file": "clip one.mp4"}
+    assert github_release_ref("https://api.github.com/repos/acme/demo/releases/assets/123") == {"repo": "acme/demo", "asset_id": "123"}
+    assert github_release_ref("https://github.com/acme/demo") is None
+    assert private_link_message("Sign in to confirm you're not a bot") is None
+    for bad in ("https://github.com/acme/demo/releases/download/--dir=x/a.mp4",
+                "https://github.com/a%2Fb/demo/releases/download/v1/a.mp4",
+                "https://github.com/acme/demo/releases/download/v1%2Fx/a.mp4",
+                "https://api.github.com/repos/acme/demo/releases/assets/12x"):
+        try:
+            github_release_ref(bad)
+            raise AssertionError("accepted " + bad)
+        except UserMessage:
+            pass
+
+    class _R:
+        def __init__(self, out="", rc=0):
+            self.stdout, self.stderr, self.returncode = out, b"", rc
+    calls, big = [], {"n": 0}
+    def fake_run(cmd, **kw):
+        calls.append(cmd)
+        if cmd[1:3] == ["api", "repos/acme/demo/releases/tags/v1"]:
+            return _R(json.dumps({"assets": [{"name": "a.mp4", "size": big["n"]}]}))
+        return _R()
+    real_which, real_run, real_move = shutil.which, subprocess.run, shutil.move
+    shutil.which, subprocess.run, shutil.move = (lambda n: "/bin/gh"), fake_run, (lambda a, b: None)
+    try:
+        gref = {"repo": "acme/demo", "tag": "v1", "file": "a.mp4"}
+        big["n"] = 300 * 1048576
+        try:
+            fetch_github_asset(gref, Path(tempfile.gettempdir()) / "sv_selftest")
+            raise AssertionError("300 MB went through without a yes")
+        except UserMessage:
+            pass
+        assert not any(c[1:3] == ["release", "download"] for c in calls)
+        assert fetch_github_asset(gref, Path(tempfile.gettempdir()) / "sv_selftest", yes=True)
+        dl = [c for c in calls if c[1:3] == ["release", "download"]][0]
+        assert dl[-2:] == ["--", "v1"]
+    finally:
+        shutil.which, subprocess.run, shutil.move = real_which, real_run, real_move
+
     profile = get_device_profile()
     assert isinstance(profile.get("is_constrained"), bool) and profile.get("limits")
     print("selftest: PASSED")
@@ -1075,6 +1260,7 @@ def main():
     parser.add_argument("--selftest", action="store_true", help="Run hermetic self-checks")
     parser.add_argument("--detector", choices=["auto", "ffmpeg", "scenedetect"], default="auto",
                         help="Scene cut detector: 'auto' (native ffmpeg with PySceneDetect escalation), 'ffmpeg' (pure ffmpeg), 'scenedetect' (PySceneDetect). Default: auto")
+    parser.add_argument("--yes", action="store_true", help="Member said yes to a download over 200 MB")
     parser.add_argument("--max-frames", type=int, default=16, help="Maximum keyframes to extract in full pass (default 16)")
     
     args = parser.parse_args()
@@ -1111,7 +1297,10 @@ def main():
         out_path = default_out_dir(slug)
 
     try:
-        run_pipeline(args.input, out_path, max_frames=args.max_frames, stage=stage, detector=args.detector)
+        run_pipeline(args.input, out_path, max_frames=args.max_frames, stage=stage, detector=args.detector, yes=args.yes)
+    except UserMessage as e:
+        print(str(e), file=sys.stderr)
+        sys.exit(1)
     except Exception as e:
         print(f"\nError: {e}", file=sys.stderr)
         sys.exit(1)
