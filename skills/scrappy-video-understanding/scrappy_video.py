@@ -28,6 +28,7 @@ Optional:
 """
 
 import argparse
+import base64
 import html
 import json
 import os
@@ -58,6 +59,10 @@ BIG_DOWNLOAD_BYTES = 200 * 1024 * 1024
 
 class UserMessage(Exception):
     """A plain line for the member, printed without a traceback"""
+
+
+class StageStop(UserMessage):
+    """An intended early stop (probe/subs on a release link); exits 0"""
 
 
 def private_link_message(text: str) -> Optional[str]:
@@ -111,9 +116,9 @@ def fetch_github_asset(ref: dict, out_dir: Path, yes: bool = False, download: bo
         size = int(asset["size"])
     except (KeyError, TypeError, ValueError):
         raise UserMessage("Could not learn the size of that file, so I am not downloading it.")
-    print(f"      GitHub asset {asset['name']}: {size / 1048576:.1f} MB")
+    print(f"      GitHub asset {asset['name']}: {size / 1048576:.1f} MB", flush=True)
     if not download:
-        raise UserMessage(f"Not downloading at this stage (no video bytes before quick or full). The file is {size / 1048576:.0f} MB.")
+        raise StageStop(f"Not downloading at this stage (no video bytes before quick or full). The file is {size / 1048576:.0f} MB.")
     if size > BIG_DOWNLOAD_BYTES and not yes:
         raise UserMessage(f"That file is {size / 1048576:.0f} MB (over 200 MB). Say yes and I will download it with your GitHub sign-in (rerun with --yes).")
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -936,6 +941,8 @@ def run_pipeline(input_target: str, out_dir: Path, max_frames: int = 16, stage: 
 
     print(f"\n[1/4] Probing media (Stage 1: Leanest Probe): {input_target}")
     meta = probe_media(input_target)
+    if ref and ref.get("file"):
+        meta["title"] = Path(ref["file"]).stem
     print(f"      Title: {meta['title']}")
     print(f"      Duration: {meta.get('duration_str') or 'Unknown'}, Resolution: {meta.get('resolution') or 'Audio-only'}")
 
@@ -1096,7 +1103,7 @@ def run_pipeline(input_target: str, out_dir: Path, max_frames: int = 16, stage: 
 
 
 def render_report_html(summary: dict, source: str, out_dir: Path) -> str:
-    """Self-contained phone-friendly report page; relative links, no external CSS or JS"""
+    """Self-contained phone-friendly report page; contact sheet embedded, no external CSS or JS"""
     e = html.escape
     meta, subs, frames = summary["metadata"], summary["subtitles"], summary["frames"]
     out = [
@@ -1111,7 +1118,8 @@ def render_report_html(summary: dict, source: str, out_dir: Path) -> str:
         f" &middot; Size: {e(str(meta.get('resolution') or 'audio only'))}</p>",
     ]
     if (out_dir / "contact_sheet.jpg").exists():
-        out.append('<h2>Contact sheet</h2><img src="contact_sheet.jpg" alt="Contact sheet of the video">')
+        b64 = base64.b64encode((out_dir / "contact_sheet.jpg").read_bytes()).decode()
+        out.append(f'<h2>Contact sheet</h2><img src="data:image/jpeg;base64,{b64}" alt="Contact sheet of the video">')
     if meta.get("chapters"):
         out.append("<h2>Chapters</h2><ul>")
         for ch in meta["chapters"]:
@@ -1186,7 +1194,7 @@ Today we are building an agent skill.
         assert "A &lt;b&gt; talk" in page and "<b> talk" not in page and "Intro" in page
         assert "contact_sheet.jpg" not in page
         (Path(tmp) / "contact_sheet.jpg").write_bytes(b"x")
-        assert 'src="contact_sheet.jpg"' in render_report_html(fake, "v.mp4", Path(tmp))
+        assert 'src="data:image/jpeg;base64,' in render_report_html(fake, "v.mp4", Path(tmp))
 
     assert private_link_message("ERROR: HTTP Error 403: Forbidden") == PRIVATE_LINE
     assert private_link_message("HTTP Error 404: Not Found") == PRIVATE_LINE
@@ -1293,14 +1301,16 @@ def main():
     if args.out:
         out_path = Path(args.out)
     else:
-        slug = re.sub(r"[^a-zA-Z0-9_-]", "_", Path(args.input).stem if not is_url(args.input) else "web_video")[:32]
+        ref = github_release_ref(args.input) if is_url(args.input) else None
+        name = Path(ref["file"]).stem if ref and ref.get("file") else "web_video"
+        slug = re.sub(r"[^a-zA-Z0-9_-]", "_", name if is_url(args.input) else Path(args.input).stem)[:32]
         out_path = default_out_dir(slug)
 
     try:
         run_pipeline(args.input, out_path, max_frames=args.max_frames, stage=stage, detector=args.detector, yes=args.yes)
     except UserMessage as e:
         print(str(e), file=sys.stderr)
-        sys.exit(1)
+        sys.exit(0 if isinstance(e, StageStop) else 1)
     except Exception as e:
         print(f"\nError: {e}", file=sys.stderr)
         sys.exit(1)

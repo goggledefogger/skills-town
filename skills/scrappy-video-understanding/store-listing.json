@@ -19,12 +19,20 @@
     "alt": "A video timeline with contact sheet, extracted frames, subtitle text, and an understanding summary card",
     "from": "https://github.com/goggledefogger/skills-town/blob/main/skills/scrappy-video-understanding/docs/hero.jpg",
     "crop": "1920x1080+0+0",
-    "version": "1.0.0"
+    "version": "1.1.1"
   },
   "changes": [
     {
       "version": "1.0.0",
       "note": "First release."
+    },
+    {
+      "version": "1.1.0",
+      "note": "Starts from the file on disk, asks before sending a video anywhere, handles private GitHub links, and writes a phone-friendly report.html."
+    },
+    {
+      "version": "1.1.1",
+      "note": "Private GitHub links get a folder named after the file, and report.html now carries its contact sheet inside it."
     }
   ],
   "desc": "Free, and part of the members' skills library. Resourceful and efficient video understanding without fragile setups or heavy GPU requirements. Tries the fastest, leanest pass first: instant subtitle harvesting via yt-dlp with zero video download, rapid metadata probe, and single-glance 4x3 contact sheets, escalating to deep scene-cut extraction only where needed. Accepts YouTube, X/Twitter, TikTok, Loom, Vimeo, direct web links, or local video/audio files. Built on yt-dlp (Unlicense) and ffmpeg (LGPL/GPL).",

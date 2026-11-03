@@ -64,7 +64,7 @@ The skill never uploads the file to Drive, Gemini, NotebookLM or any service off
 
 ## Private links
 
-If a link fails with 401, 403 or 404, the script prints one line and no traceback: "That link is private or not found. If it is yours, sign in (for GitHub: gh auth login) or download it and tell me where the file is." For GitHub release assets (`github.com/<owner>/<repo>/releases/download/<tag>/<file>` or `api.github.com/repos/.../releases/assets/<id>`) the script uses the member's `gh` sign-in when `gh auth status` succeeds. It prints the asset size first. Over 200 MB it stops and asks for a yes; after the yes, rerun with `--yes`. The download lands in the output folder as `source.<ext>` and the pipeline then runs on it as a local file.
+If a link fails with 401, 403 or 404, the script prints one line and no traceback: "That link is private or not found. If it is yours, sign in (for GitHub: gh auth login) or download it and tell me where the file is." For GitHub release assets (`github.com/<owner>/<repo>/releases/download/<tag>/<file>` or `api.github.com/repos/.../releases/assets/<id>`) the script uses the member's `gh` sign-in when `gh auth status` succeeds. It prints the asset size first. Over 200 MB it stops and asks for a yes; after the yes, rerun with `--yes`. The download lands in `~/.cache/scrappy-video/<file name without extension>/` as `source.<ext>` and the pipeline then runs on it as a local file.
 
 ## Progressive Scrappy Passes
 
@@ -148,7 +148,7 @@ Everything is written to `~/.cache/scrappy-video/<slug>/` (or `--out`). Nothing 
 |---|---|---|
 | `summary.json` | every stage | All results in one JSON file (fields below) |
 | `report.md` | `quick` and `full` | Markdown report: overview, chapters, contact sheet, first 25 transcript lines |
-| `report.html` | `quick` and `full` | The same report as one self-contained page that reads on a phone: title, source, length, contact sheet, chapters, transcript (collapsed), key frames, folder path |
+| `report.html` | `quick` and `full` | The same report as one self-contained page that reads on a phone: title, source, length, contact sheet (embedded in the page), chapters, transcript (collapsed), key frames, folder path |
 | `transcript.txt` | when captions exist | Clean `[MM:SS]` transcript, always `.txt` |
 | `transcript.json` | YouTube links, when the youtube-transcript skill ran | Raw transcript data |
 | `captions.<lang>.vtt` or `.srt` | non-YouTube links with captions | Raw captions from yt-dlp |
