@@ -1,0 +1,274 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "version": "1.0.0",
+  "updated_at": "2026-11-02",
+  "description": "Predefined and extensible registry of open-source video and audio processing tools.",
+  "categories": {
+    "ingest": {
+      "name": "Ingestion & Stream Downloading",
+      "description": "Fetching remote video/audio streams, playlists, and subtitles"
+    },
+    "probe": {
+      "name": "Inspection & Metadata Probing",
+      "description": "Rapid analysis of container, codecs, streams, and duration"
+    },
+    "transcription": {
+      "name": "Speech-to-Text & Subtitles",
+      "description": "Extracting spoken audio and generating timestamped text"
+    },
+    "scene_detection": {
+      "name": "Scene Cut Detection & Frame Sampling",
+      "description": "Identifying visual transitions, cuts, and slide changes"
+    },
+    "storyboard": {
+      "name": "Storyboards & Contact Sheets",
+      "description": "Generating single-glance tiled image overviews of video timelines"
+    },
+    "audio_processing": {
+      "name": "Audio Manipulation & Loudness",
+      "description": "Separation, normalization, filtering, and silence detection"
+    },
+    "diarization": {
+      "name": "Speaker Diarization",
+      "description": "Distinguishing who spoke when across multiple participants"
+    },
+    "ocr": {
+      "name": "Visual OCR & Slide Text Extraction",
+      "description": "Reading text, diagrams, and terminal commands directly from frames"
+    },
+    "local_vision": {
+      "name": "Local Multimodal Vision Models",
+      "description": "On-device image and frame understanding via Ollama or llama.cpp"
+    },
+    "editing_rendering": {
+      "name": "Video Editing & Captions Rendering",
+      "description": "Automatic silence removal, caption burning, and timeline composition"
+    },
+    "tracking": {
+      "name": "Object Detection & Video Tracking",
+      "description": "Real-time visual object detection, multi-object tracking, instance segmentation, and pose estimation across video streams"
+    }
+  },
+  "tools": {
+    "yt-dlp": {
+      "name": "yt-dlp",
+      "category": "ingest",
+      "bin": "yt-dlp",
+      "license": "Unlicense",
+      "url": "https://github.com/yt-dlp/yt-dlp",
+      "description": "Leading open-source downloader for YouTube, Twitter/X, TikTok, Loom, and 1000+ sites. Supports instant subtitle harvesting without video download.",
+      "install": "brew install yt-dlp",
+      "priority": 1
+    },
+    "streamlink": {
+      "name": "streamlink",
+      "category": "ingest",
+      "bin": "streamlink",
+      "license": "BSD-2-Clause",
+      "url": "https://github.com/streamlink/streamlink",
+      "description": "Extracts streams from various services to pipe into players or processing pipelines.",
+      "install": "brew install streamlink",
+      "priority": 2
+    },
+    "ffprobe": {
+      "name": "ffprobe",
+      "category": "probe",
+      "bin": "ffprobe",
+      "license": "LGPL/GPL",
+      "url": "https://ffmpeg.org",
+      "description": "Universal multimedia stream analyzer; extracts duration, resolution, codecs, and chapters in JSON format in milliseconds.",
+      "install": "brew install ffmpeg",
+      "priority": 1
+    },
+    "mediainfo": {
+      "name": "MediaInfo",
+      "category": "probe",
+      "bin": "mediainfo",
+      "license": "BSD-2-Clause",
+      "url": "https://mediaarea.net/en/MediaInfo",
+      "description": "Detailed technical and tag information provider for audio and video files.",
+      "install": "brew install mediainfo",
+      "priority": 2
+    },
+    "ffmpeg": {
+      "name": "ffmpeg",
+      "category": "scene_detection",
+      "bin": "ffmpeg",
+      "license": "LGPL/GPL",
+      "url": "https://ffmpeg.org",
+      "description": "The foundational open-source multimedia workhorse. Handles scene change detection (gt(scene,0.3)), frame extraction, contact sheet tiling, and audio conversion.",
+      "install": "brew install ffmpeg",
+      "priority": 1
+    },
+    "scenedetect": {
+      "name": "PySceneDetect",
+      "category": "scene_detection",
+      "bin": "scenedetect",
+      "license": "BSD-3-Clause",
+      "url": "https://github.com/Breakthrough/PySceneDetect",
+      "description": "Fast content-aware scene cut detector (850+ FPS). Excellent statistical color and edge difference algorithms.",
+      "install": "uv tool install scenedetect (or run via uvx scenedetect)",
+      "priority": 2
+    },
+    "omnishotcut": {
+      "name": "OmniShotCut",
+      "category": "scene_detection",
+      "bin": "omnishotcut",
+      "license": "Apache-2.0",
+      "url": "https://github.com/UVA-Computer-Vision-Lab/OmniShotCut",
+      "description": "NeurIPS 2026 Deep Learning SOTA for complex shot boundaries (wipes, dissolves, fades). Heavy PyTorch + checkpoint model.",
+      "install": "pip install git+https://github.com/UVA-Computer-Vision-Lab/OmniShotCut.git",
+      "priority": 5
+    },
+    "video-analyzer": {
+      "name": "video-analyzer",
+      "category": "local_vision",
+      "bin": "video-analyzer",
+      "license": "MIT",
+      "url": "https://github.com/byjlw/video-analyzer",
+      "description": "Multi-stage frame-by-frame LLM vision analyzer (Llama 3.2 Vision via Ollama) and Whisper audio transcription.",
+      "install": "git clone https://github.com/byjlw/video-analyzer && pip install -r requirements.txt",
+      "priority": 3
+    },
+    "scikit-video": {
+      "name": "scikit-video",
+      "category": "probe",
+      "bin": "skvideo",
+      "license": "BSD-3-Clause",
+      "url": "https://github.com/scikit-video/scikit-video",
+      "description": "Legacy NumPy/SciPy video processing wrapper. (Largely superseded by native FFmpeg and PySceneDetect).",
+      "install": "pip install scikit-video",
+      "priority": 9
+    },
+    "vcsi": {
+      "name": "vcsi",
+      "category": "storyboard",
+      "bin": "vcsi",
+      "license": "MIT",
+      "url": "https://github.com/amietn/vcsi",
+      "description": "Video Contact Sheet generator that creates beautiful grid sheets with timestamp labels and video metadata headers.",
+      "install": "pip install vcsi",
+      "priority": 2
+    },
+    "imagemagick": {
+      "name": "ImageMagick (montage)",
+      "category": "storyboard",
+      "bin": "montage",
+      "license": "Apache-2.0",
+      "url": "https://imagemagick.org",
+      "description": "Powerful image composition tool; 'montage' arranges arbitrary keyframe images into annotated contact sheets.",
+      "install": "brew install imagemagick",
+      "priority": 3
+    },
+    "youtube-transcript": {
+      "name": "youtube-transcript",
+      "category": "transcription",
+      "bin": "~/.claude/skills/youtube-transcript/run.sh",
+      "license": "MIT",
+      "url": "https://github.com/goggledefogger/claude-skills/tree/main/skills/youtube-transcript",
+      "description": "Public YouTube transcript skill. Fetches timestamped subtitles in milliseconds without downloading video bytes; includes automated fallback to hosted endpoints when datacenter IPs are blocked.",
+      "install": "Bundled in ~/.claude/skills/youtube-transcript or via claude-skills repo",
+      "priority": 1
+    },
+    "whisper-ctranslate2": {
+      "name": "whisper-ctranslate2",
+      "category": "transcription",
+      "bin": "whisper-ctranslate2",
+      "license": "MIT",
+      "url": "https://github.com/Softcatala/whisper-ctranslate2",
+      "description": "Fast Whisper speech recognition powered by CTranslate2. 4x faster than reference implementation on CPU/GPU, low memory footprint.",
+      "install": "uv tool install whisper-ctranslate2",
+      "priority": 2
+    },
+    "mlx-whisper": {
+      "name": "mlx-whisper",
+      "category": "transcription",
+      "bin": "mlx_whisper",
+      "license": "MIT",
+      "url": "https://github.com/ml-explore/mlx-examples/tree/main/whisper",
+      "description": "High-performance Apple Silicon (M-series GPU) accelerated Whisper implementation using Apple MLX.",
+      "install": "pip install mlx-whisper",
+      "priority": 2
+    },
+    "whisper-cpp": {
+      "name": "whisper.cpp",
+      "category": "transcription",
+      "bin": "whisper-cpp",
+      "license": "MIT",
+      "url": "https://github.com/ggerganov/whisper.cpp",
+      "description": "High-performance inference of OpenAI's Whisper model in plain C/C++ with no dependencies, optimized for Apple Silicon Metal and Raspberry Pi ARM NEON (tiny/base models run in <200MB RAM).",
+      "install": "brew install whisper-cpp (or build from source with cmake on Raspberry Pi)",
+      "priority": 3
+    },
+    "whisperx": {
+      "name": "WhisperX",
+      "category": "diarization",
+      "bin": "whisperx",
+      "license": "BSD-2-Clause",
+      "url": "https://github.com/m-bain/whisperX",
+      "description": "Whisper with word-level forced alignment using phoneme models and speaker diarization via pyannote.",
+      "install": "pip install whisperx",
+      "priority": 1
+    },
+    "pyannote-audio": {
+      "name": "pyannote.audio",
+      "category": "diarization",
+      "bin": "pyannote-audio",
+      "license": "MIT",
+      "url": "https://github.com/pyannote/pyannote-audio",
+      "description": "Neural toolkit for speaker diarization, speech activity detection, and speaker identification.",
+      "install": "pip install pyannote.audio",
+      "priority": 2
+    },
+    "tesseract": {
+      "name": "Tesseract OCR",
+      "category": "ocr",
+      "bin": "tesseract",
+      "license": "Apache-2.0",
+      "url": "https://github.com/tesseract-ocr/tesseract",
+      "description": "Industry standard open-source OCR engine for extracting text and slide contents from video keyframes.",
+      "install": "brew install tesseract",
+      "priority": 1
+    },
+    "auto-editor": {
+      "name": "auto-editor",
+      "category": "editing_rendering",
+      "bin": "auto-editor",
+      "license": "MIT",
+      "url": "https://auto-editor.com",
+      "description": "Command-line application that analyzes audio/video volume and motion to automatically cut out silences and dead pauses.",
+      "install": "pip install auto-editor",
+      "priority": 1
+    },
+    "hyperframes": {
+      "name": "HyperFrames",
+      "category": "editing_rendering",
+      "bin": "hyperframes",
+      "license": "Apache-2.0",
+      "url": "https://github.com/heygen-com/hyperframes",
+      "description": "Open-source tool that turns web pages, HTML title cards, and timed captions into rendered MP4 videos.",
+      "install": "npx hyperframes",
+      "priority": 2
+    },
+    "qwen2.5-vl": {
+      "name": "Qwen2.5-VL (Ollama)",
+      "category": "local_vision",
+      "bin": "ollama",
+      "license": "Apache-2.0",
+      "url": "https://ollama.com/library/qwen2.5-vl",
+      "description": "Local open-weights vision-language model capable of recognizing slide content, diagrams, and video frame context.",
+      "install": "ollama run qwen2.5-vl",
+      "priority": 1
+    },
+    "ultralytics": {
+      "name": "Ultralytics YOLO",
+      "category": "tracking",
+      "bin": "yolo",
+      "license": "AGPL-3.0",
+      "url": "https://github.com/ultralytics/ultralytics",
+      "description": "Leading open-source real-time object detection and multi-object tracking framework (YOLOv8/v11). Features fast nano models (yolo11n, ~6MB) running 100+ FPS locally, video tracking CLI ('yolo track source=video.mp4'), and CoreML export.",
+      "install": "uv tool install ultralytics (or pip install ultralytics)",
+      "priority": 1
+    }
+  }
+}

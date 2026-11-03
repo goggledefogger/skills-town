@@ -4,3 +4,4 @@ node_modules/
 __pycache__/
 *.pyc
 build/
+skills/scrappy-video-understanding/custom_tools.json
