@@ -37,6 +37,7 @@ import subprocess
 import sys
 import tempfile
 import urllib.parse
+from typing import Optional
 from pathlib import Path
 
 
@@ -280,20 +281,35 @@ def get_best_tool(category: str) -> dict:
     return None
 
 
+def ytdlp_cmd():
+    """yt-dlp on PATH, else run it through uvx so uv alone is enough"""
+    if shutil.which("yt-dlp"):
+        return [shutil.which("yt-dlp")]
+    if shutil.which("uvx"):
+        return [shutil.which("uvx"), "--python", ">=3.10", "yt-dlp"]
+    return None
+
+
+def default_out_dir(slug: str) -> Path:
+    """Working files go in the user cache, never into the folder the chat runs in"""
+    base = os.environ.get("XDG_CACHE_HOME") or str(Path.home() / ".cache")
+    return Path(base) / "scrappy-video" / slug
+
+
 def check_dependencies() -> dict:
     """Check availability of system dependencies."""
     tools = {
         "ffmpeg": shutil.which("ffmpeg"),
         "ffprobe": shutil.which("ffprobe"),
-        "yt-dlp": shutil.which("yt-dlp"),
+        "yt-dlp": " ".join(ytdlp_cmd() or []) or None,
         "whisper": shutil.which("whisper-ctranslate2") or shutil.which("whisper") or shutil.which("mlx_whisper"),
         "uv": shutil.which("uv"),
     }
     status = {
-        "ok": bool(tools["ffmpeg"] and tools["ffprobe"]),
+        "ok": bool(tools["ffmpeg"] and tools["yt-dlp"]),
         "tools": tools,
-        "missing": [name for name, path in tools.items() if not path and name in ("ffmpeg", "ffprobe", "yt-dlp")],
-        "optional_missing": [name for name, path in tools.items() if not path and name not in ("ffmpeg", "ffprobe", "yt-dlp")],
+        "missing": [name for name, path in tools.items() if not path and name in ("ffmpeg", "yt-dlp")],
+        "optional_missing": [name for name, path in tools.items() if not path and name not in ("ffmpeg", "yt-dlp")],
     }
     return status
 
@@ -304,12 +320,12 @@ def print_check_report():
     print("Scrappy Video Understanding — Dependency Check\n" + "=" * 50)
     for name, path in status["tools"].items():
         state = f"OK ({path})" if path else "MISSING"
-        opt = " [optional]" if name in ("whisper", "uv") else " [required]"
+        opt = " [optional]" if name in ("whisper", "uv", "ffprobe") else " [required]"
         print(f"  {name:10} : {state}{opt}")
     
     print("\nStatus:")
     if not status["missing"]:
-        print("  All core tools (ffmpeg, ffprobe, yt-dlp) are ready!")
+        print("  All core tools (ffmpeg, yt-dlp) are ready!")
     else:
         print(f"  Missing required tools: {', '.join(status['missing'])}")
         print("  Install with Homebrew:")
@@ -369,6 +385,28 @@ def clean_vtt_to_text(vtt_content: str) -> str:
     return "\n".join(blocks)
 
 
+def ffmpeg_info_to_probe(stderr: str) -> dict:
+    """Shape `ffmpeg -i` output like ffprobe's JSON, for hosts that only have ffmpeg"""
+    # ponytail: covers duration, codecs, size and fps only; chapters need real ffprobe
+    data = {"format": {}, "streams": []}
+    d = re.search(r"Duration: (\d+):(\d+):([\d.]+)", stderr)
+    if d:
+        data["format"]["duration"] = str(int(d[1]) * 3600 + int(d[2]) * 60 + float(d[3]))
+    for line in stderr.splitlines():
+        m = re.search(r"Stream #\d+:\d+.*?: (Video|Audio|Subtitle): (\w+)", line)
+        if not m:
+            continue
+        st = {"codec_type": m[1].lower(), "codec_name": m[2]}
+        size = re.search(r", (\d{2,5})x(\d{2,5})", line)
+        if size:
+            st["width"], st["height"] = int(size[1]), int(size[2])
+        fps = re.search(r"([\d.]+) fps", line)
+        if fps:
+            st["r_frame_rate"] = f"{fps[1]}/1"
+        data["streams"].append(st)
+    return data
+
+
 def probe_media(input_target: str) -> dict:
     """Extract metadata using ffprobe or yt-dlp."""
     meta = {
@@ -390,10 +428,10 @@ def probe_media(input_target: str) -> dict:
     }
 
     if meta["is_url"]:
-        ytdlp = shutil.which("yt-dlp")
+        ytdlp = ytdlp_cmd()
         if not ytdlp:
-            raise RuntimeError("yt-dlp is required to probe URLs. Install with `brew install yt-dlp`.")
-        cmd = [ytdlp, "--dump-json", "--skip-download", "--no-warnings", input_target]
+            raise RuntimeError("yt-dlp is required to probe URLs. Install uv (https://docs.astral.sh/uv/) or yt-dlp.")
+        cmd = [*ytdlp, "--dump-json", "--skip-download", "--no-warnings", input_target]
         res = subprocess.run(cmd, capture_output=True, text=True, check=True)
         data = json.loads(res.stdout)
         
@@ -428,8 +466,9 @@ def probe_media(input_target: str) -> dict:
             })
     else:
         ffprobe = shutil.which("ffprobe")
-        if not ffprobe:
-            raise RuntimeError("ffprobe is required to probe local media. Install with `brew install ffmpeg`.")
+        ffmpeg_bin = shutil.which("ffmpeg")
+        if not ffprobe and not ffmpeg_bin:
+            raise RuntimeError("ffmpeg is required to probe local media. Install it from https://ffmpeg.org/download.html")
         cmd = [
             ffprobe,
             "-v", "quiet",
@@ -439,9 +478,13 @@ def probe_media(input_target: str) -> dict:
             "-show_chapters",
             input_target,
         ]
-        res = subprocess.run(cmd, capture_output=True, text=True, check=True)
-        data = json.loads(res.stdout)
-        
+        if ffprobe:
+            res = subprocess.run(cmd, capture_output=True, text=True, check=True)
+            data = json.loads(res.stdout)
+        else:
+            res = subprocess.run([ffmpeg_bin, "-hide_banner", "-i", input_target], capture_output=True, text=True)
+            data = ffmpeg_info_to_probe(res.stderr)
+
         fmt = data.get("format", {})
         meta["title"] = Path(input_target).stem
         if "duration" in fmt:
@@ -525,14 +568,14 @@ def harvest_subtitles(input_target: str, out_dir: Path) -> dict:
                     # Non-fatal, fallback to yt-dlp
                     pass
 
-        ytdlp = shutil.which("yt-dlp")
+        ytdlp = ytdlp_cmd()
         if not ytdlp:
             return res
         
         # 2. General URL subtitle download via yt-dlp
         sub_template = str(out_dir / "captions.%(ext)s")
         cmd = [
-            ytdlp,
+            *ytdlp,
             "--write-subs",
             "--write-auto-subs",
             "--sub-langs", "en.*,en,all",
@@ -837,12 +880,12 @@ def run_pipeline(input_target: str, out_dir: Path, max_frames: int = 16, stage: 
     local_media = input_target
     if meta["is_url"]:
         # Download lightweight stream (capped at 480p on constrained/Pi, 720p on standard)
-        ytdlp = shutil.which("yt-dlp")
+        ytdlp = ytdlp_cmd()
         max_h = 480 if (stage == "quick" or profile["is_constrained"]) else 720
         print(f"\n[3/4] Ingesting lightweight stream (max {max_h}p) for visual sampling...")
         download_target = out_dir / "source_stream.mp4"
         cmd = [
-            ytdlp,
+            *ytdlp,
             "-f", f"bestvideo[height<={max_h}]+bestaudio/best[height<={max_h}]/best",
             "-o", str(download_target),
             "--no-warnings",
@@ -995,6 +1038,15 @@ Today we are building an agent skill.
         finally:
             CUSTOM_REGISTRY = saved
 
+    info = ffmpeg_info_to_probe(
+        "  Duration: 00:01:05.50, start: 0.000000, bitrate: 512 kb/s\n"
+        "  Stream #0:0[0x1](und): Video: h264 (High), yuv420p, 1280x720, 400 kb/s, 29.97 fps, 30 tbr\n"
+        "  Stream #0:1[0x2](und): Audio: aac (LC), 44100 Hz, stereo, fltp, 128 kb/s\n")
+    assert float(info["format"]["duration"]) == 65.5
+    kinds = [(st["codec_type"], st["codec_name"]) for st in info["streams"]]
+    assert kinds == [("video", "h264"), ("audio", "aac")]
+    assert info["streams"][0]["width"] == 1280 and info["streams"][0]["height"] == 720
+
     profile = get_device_profile()
     assert isinstance(profile.get("is_constrained"), bool) and profile.get("limits")
     print("selftest: PASSED")
@@ -1004,7 +1056,7 @@ Today we are building an agent skill.
 def main():
     parser = argparse.ArgumentParser(description="Scrappy Video Understanding CLI (Resourceful & Progressive)")
     parser.add_argument("input", nargs="?", help="Video URL or local media file path")
-    parser.add_argument("--out", "-o", help="Output directory (defaults to .scratch/video/<slug>)")
+    parser.add_argument("--out", "-o", help="Output directory (defaults to ~/.cache/scrappy-video/<slug>)")
     parser.add_argument("--stage", choices=["probe", "subs", "quick", "full"], default="quick",
                         help="Progressive stage: 'probe' (metadata only), 'subs' (probe + subtitles), 'quick' (probe + subs + contact sheet), 'full' (all passes). Default: quick")
     parser.add_argument("--quick", action="store_true", help="Shorthand for --stage quick (fast, leanest visual pass)")
@@ -1056,7 +1108,7 @@ def main():
         out_path = Path(args.out)
     else:
         slug = re.sub(r"[^a-zA-Z0-9_-]", "_", Path(args.input).stem if not is_url(args.input) else "web_video")[:32]
-        out_path = Path(".scratch") / "video_understanding" / slug
+        out_path = default_out_dir(slug)
 
     try:
         run_pipeline(args.input, out_path, max_frames=args.max_frames, stage=stage, detector=args.detector)

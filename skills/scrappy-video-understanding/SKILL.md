@@ -1,6 +1,6 @@
 ---
 name: scrappy-video-understanding
-description: Understand any video or link (YouTube, Google Drive, Twitter/X, TikTok, Loom, Vimeo, direct URLs, or local files) using scrappy, progressive passes: fast metadata probe, instant subtitle harvesting, keyframe scene-change extraction, contact sheet storyboard generation, and audio speech transcription. Use when the user provides a video URL, drops a media file, or asks to understand/summarize/extract frames from a video.
+description: "Understand any video or link (YouTube, Google Drive, Twitter/X, TikTok, Loom, Vimeo, direct URLs, or local files) using scrappy, progressive passes: fast metadata probe, instant subtitle harvesting, keyframe scene-change extraction, contact sheet storyboard generation, and audio speech transcription. Use when the user provides a video URL, drops a media file, or asks to understand/summarize/extract frames from a video."
 ---
 
 # Scrappy Video Understanding
@@ -181,10 +181,7 @@ python3 .agents/skills/scrappy-video-understanding/scrappy_video.py --register-t
 ## What to Show the User
 
 1. **Executive Summary**: 2-3 sentences on what the video covers, the author/speaker, and core thesis.
-2. **Visual Contact Sheet**:
-   ```images
-   .scratch/video_understanding/<slug>/contact_sheet.jpg
-   ```
+2. **Visual Contact Sheet**: show the `contact_sheet.jpg` path the script printed (working files live in `~/.cache/scrappy-video/<slug>/`, never in the user's notes). If your surface can only show images from inside the notes folder, copy just that one image there.
 3. **Timeline & Chapters**: Bulleted list with `[MM:SS]` timestamps for key topic shifts.
 4. **Key Quotes / Transcripts**: Exact quotes where actionable advice, numbers, or decisions were made.
 5. **Path to Artifacts**: Point to the generated `report.md`, `summary.json`, and extracted frames directory.
