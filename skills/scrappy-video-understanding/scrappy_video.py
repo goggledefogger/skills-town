@@ -62,40 +62,58 @@ class UserMessage(Exception):
 
 def private_link_message(text: str) -> Optional[str]:
     """Map a 401/403/404 style failure to the one plain line, else None"""
-    if re.search(r"\b(401|403|404)\b|Unauthorized|Forbidden|Not Found|[Pp]rivate video|Sign in", text or ""):
+    if re.search(r"\b(401|403|404)\b|Unauthorized|Forbidden|Not Found|[Pp]rivate video", text or ""):
         return PRIVATE_LINE
     return None
 
 
+def last_line(text: str) -> str:
+    return (text.strip().splitlines() or ["unknown error"])[-1]
+
+
 def github_release_ref(url: str) -> Optional[dict]:
-    """Recognise GitHub release asset URLs; returns repo plus tag/file or asset id"""
+    """Recognise GitHub release asset URLs; returns repo plus tag/file or asset id.
+    A recognised shape with an unsafe segment raises the plain line"""
     u = urllib.parse.urlparse(url)
     parts = [urllib.parse.unquote(x) for x in u.path.split("/") if x]
+    name_ok = lambda x: re.fullmatch(r"[A-Za-z0-9._-]+", x) and x not in (".", "..")
     if u.netloc == "github.com" and len(parts) >= 6 and parts[2:4] == ["releases", "download"]:
-        return {"repo": f"{parts[0]}/{parts[1]}", "tag": parts[4], "file": "/".join(parts[5:])}
+        owner, repo, tag = parts[0], parts[1], parts[4]
+        if not (name_ok(owner) and name_ok(repo)) or tag.startswith("-") or re.search(r"[/?#]", tag):
+            raise UserMessage(PRIVATE_LINE)
+        return {"repo": f"{owner}/{repo}", "tag": tag, "file": "/".join(parts[5:])}
     if u.netloc == "api.github.com" and len(parts) == 6 and parts[0] == "repos" and parts[3:5] == ["releases", "assets"]:
+        if not (name_ok(parts[1]) and name_ok(parts[2])) or not parts[5].isdigit():
+            raise UserMessage(PRIVATE_LINE)
         return {"repo": f"{parts[1]}/{parts[2]}", "asset_id": parts[5]}
     return None
 
 
-def fetch_github_asset(ref: dict, out_dir: Path, yes: bool = False) -> Optional[Path]:
-    """Download a release asset with the member's gh sign-in; None when gh is not usable"""
+def fetch_github_asset(ref: dict, out_dir: Path, yes: bool = False, download: bool = True) -> Optional[Path]:
+    """Download a release asset with the member's gh sign-in; None when gh is not usable.
+    With download=False only the size is learned and printed"""
     gh = shutil.which("gh")
     if not gh or subprocess.run([gh, "auth", "status"], capture_output=True).returncode != 0:
         return None
+    q = urllib.parse.quote
     if "asset_id" in ref:
-        api = f"repos/{ref['repo']}/releases/assets/{ref['asset_id']}"
+        api = f"repos/{q(ref['repo'], safe='/')}/releases/assets/{q(ref['asset_id'])}"
     else:
-        api = f"repos/{ref['repo']}/releases/tags/{ref['tag']}"
+        api = f"repos/{q(ref['repo'], safe='/')}/releases/tags/{q(ref['tag'], safe='')}"
     res = subprocess.run([gh, "api", api], capture_output=True, text=True)
     if res.returncode != 0:
-        raise UserMessage(private_link_message(res.stderr) or PRIVATE_LINE)
+        raise UserMessage(private_link_message(res.stderr) or "GitHub lookup failed: " + last_line(res.stderr))
     data = json.loads(res.stdout)
-    asset = data if "asset_id" in ref else next((a for a in data.get("assets", []) if a["name"] == ref["file"]), None)
+    asset = data if "asset_id" in ref else next((a for a in data.get("assets", []) if a.get("name") == ref["file"]), None)
     if not asset:
         raise UserMessage(PRIVATE_LINE)
-    size = int(asset["size"])
+    try:
+        size = int(asset["size"])
+    except (KeyError, TypeError, ValueError):
+        raise UserMessage("Could not learn the size of that file, so I am not downloading it.")
     print(f"      GitHub asset {asset['name']}: {size / 1048576:.1f} MB")
+    if not download:
+        raise UserMessage(f"Not downloading at this stage (no video bytes before quick or full). The file is {size / 1048576:.0f} MB.")
     if size > BIG_DOWNLOAD_BYTES and not yes:
         raise UserMessage(f"That file is {size / 1048576:.0f} MB (over 200 MB). Say yes and I will download it with your GitHub sign-in (rerun with --yes).")
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -104,12 +122,13 @@ def fetch_github_asset(ref: dict, out_dir: Path, yes: bool = False) -> Optional[
         with open(dest, "wb") as fh:
             run = subprocess.run([gh, "api", "-H", "Accept: application/octet-stream", api], stdout=fh, stderr=subprocess.PIPE)
     else:
-        run = subprocess.run([gh, "release", "download", ref["tag"], "--repo", ref["repo"], "--pattern", asset["name"],
-                              "--dir", str(out_dir), "--clobber"], capture_output=True)
+        run = subprocess.run([gh, "release", "download", "--repo", ref["repo"], "--pattern", asset["name"],
+                              "--dir", str(out_dir), "--clobber", "--", ref["tag"]], capture_output=True)
         if run.returncode == 0:
             shutil.move(str(out_dir / asset["name"]), dest)
     if run.returncode != 0:
-        raise UserMessage(PRIVATE_LINE)
+        err = run.stderr.decode(errors="replace")
+        raise UserMessage(private_link_message(err) or "Download failed: " + last_line(err))
     return dest
 
 
@@ -911,7 +930,7 @@ def run_pipeline(input_target: str, out_dir: Path, max_frames: int = 16, stage: 
     original = input_target
     ref = github_release_ref(input_target) if is_url(input_target) else None
     if ref:
-        fetched = fetch_github_asset(ref, out_dir, yes=yes)
+        fetched = fetch_github_asset(ref, out_dir, yes=yes, download=stage not in ("probe", "subs"))
         if fetched:
             input_target = str(fetched)
 
@@ -1040,7 +1059,7 @@ def run_pipeline(input_target: str, out_dir: Path, max_frames: int = 16, stage: 
     if meta.get("chapters"):
         report_lines.extend(["## Chapters", ""])
         for ch in meta["chapters"]:
-            m, s = divmod(int(ch["start"]), 60)
+            m, s = divmod(int(ch.get("start") or 0), 60)
             report_lines.append(f"- **`{m:02d}:{s:02d}`** {ch['title']}")
         report_lines.append("")
 
@@ -1096,7 +1115,7 @@ def render_report_html(summary: dict, source: str, out_dir: Path) -> str:
     if meta.get("chapters"):
         out.append("<h2>Chapters</h2><ul>")
         for ch in meta["chapters"]:
-            m, s = divmod(int(ch["start"]), 60)
+            m, s = divmod(int(ch.get("start") or 0), 60)
             out.append(f"<li>{m:02d}:{s:02d} {e(str(ch['title']))}</li>")
         out.append("</ul>")
     if subs.get("text_path") and Path(subs["text_path"]).exists():
@@ -1106,7 +1125,7 @@ def render_report_html(summary: dict, source: str, out_dir: Path) -> str:
         out.append("<h2>Key frames</h2><ul>")
         for f in frames["frames"]:
             rel = os.path.relpath(f, out_dir)
-            out.append(f'<li><a href="{e(rel, quote=True)}">{e(rel)}</a></li>')
+            out.append(f'<li><a href="{e(urllib.parse.quote(rel), quote=True)}">{e(rel)}</a></li>')
         out.append("</ul>")
     out.append(f"<p>All the files are in {e(str(out_dir))}</p></body></html>")
     return "\n".join(out)
@@ -1176,6 +1195,42 @@ Today we are building an agent skill.
     assert ref == {"repo": "acme/demo", "tag": "v1.0", "file": "clip one.mp4"}
     assert github_release_ref("https://api.github.com/repos/acme/demo/releases/assets/123") == {"repo": "acme/demo", "asset_id": "123"}
     assert github_release_ref("https://github.com/acme/demo") is None
+    assert private_link_message("Sign in to confirm you're not a bot") is None
+    for bad in ("https://github.com/acme/demo/releases/download/--dir=x/a.mp4",
+                "https://github.com/a%2Fb/demo/releases/download/v1/a.mp4",
+                "https://github.com/acme/demo/releases/download/v1%2Fx/a.mp4",
+                "https://api.github.com/repos/acme/demo/releases/assets/12x"):
+        try:
+            github_release_ref(bad)
+            raise AssertionError("accepted " + bad)
+        except UserMessage:
+            pass
+
+    class _R:
+        def __init__(self, out="", rc=0):
+            self.stdout, self.stderr, self.returncode = out, b"", rc
+    calls, big = [], {"n": 0}
+    def fake_run(cmd, **kw):
+        calls.append(cmd)
+        if cmd[1:3] == ["api", "repos/acme/demo/releases/tags/v1"]:
+            return _R(json.dumps({"assets": [{"name": "a.mp4", "size": big["n"]}]}))
+        return _R()
+    real_which, real_run, real_move = shutil.which, subprocess.run, shutil.move
+    shutil.which, subprocess.run, shutil.move = (lambda n: "/bin/gh"), fake_run, (lambda a, b: None)
+    try:
+        gref = {"repo": "acme/demo", "tag": "v1", "file": "a.mp4"}
+        big["n"] = 300 * 1048576
+        try:
+            fetch_github_asset(gref, Path(tempfile.gettempdir()) / "sv_selftest")
+            raise AssertionError("300 MB went through without a yes")
+        except UserMessage:
+            pass
+        assert not any(c[1:3] == ["release", "download"] for c in calls)
+        assert fetch_github_asset(gref, Path(tempfile.gettempdir()) / "sv_selftest", yes=True)
+        dl = [c for c in calls if c[1:3] == ["release", "download"]][0]
+        assert dl[-2:] == ["--", "v1"]
+    finally:
+        shutil.which, subprocess.run, shutil.move = real_which, real_run, real_move
 
     profile = get_device_profile()
     assert isinstance(profile.get("is_constrained"), bool) and profile.get("limits")

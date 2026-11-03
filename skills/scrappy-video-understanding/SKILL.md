@@ -28,7 +28,7 @@ Built on [yt-dlp](https://github.com/yt-dlp/yt-dlp) (Unlicense) for streaming me
 When the user provides a video (YouTube link, Google Drive link, Twitter/X, TikTok, Loom, Vimeo, or local file), follow this 3-step conversational pattern:
 
 ### Step 0: Start From the File on Disk
-Videos live on disk and stay there. If the member mentions a video with no path or link, ask one question: where is the file? In the Astrolabe dashboard a dropped file arrives as a line "(I attached a file; it is saved at <path>)" with its size and length; use that path directly. Every local pass runs on the file in place. The script never copies a local input; only derived files go to `~/.cache/scrappy-video/<slug>/`.
+Videos live on disk and stay there. If the member mentions a video with no path or link, ask one question: where is the file? On some chat surfaces a dropped file arrives as a line "(I attached a file; it is saved at <path>)" with its size and length; use that path directly. Every local pass runs on the file in place. The script never copies a local input; only derived files go to `~/.cache/scrappy-video/<slug>/`.
 
 ### Step 1: Run Instant Local Reconnaissance (1-2s, 0 Video Bytes)
 Run the leanest pass immediately:
@@ -58,7 +58,7 @@ Before escalating to deep processing or heavy downloading, ask:
 The skill never uploads the file to Drive, Gemini, NotebookLM or any service off the machine on its own. In order:
 
 1. Prefer sending the distilled artifacts (`contact_sheet.jpg`, the transcript and the report) over the whole file.
-2. If the whole file is genuinely needed, first check Google Drive for an existing copy. With the Google Drive connector, call `search_files` with a query like `title contains '<file name without extension>' and mimeType contains 'video/'`. Each result carries `title` and `fileSize` (bytes). Size is not a query operator, so compare `fileSize` to the local file size on the results. A match on name and size means reuse that copy's link.
+2. If the whole file is genuinely needed, first check Google Drive for an existing copy. With the Google Drive connector, call `search_files` with a query like `title contains '<file name without extension>' and mimeType contains 'video/'`. Each result carries `title` and `fileSize` (bytes). Size is not a query operator, so compare `fileSize` to the local file size on the results. Read the local size yourself (`stat` or `ls -l`); the script does not print it. A match on name and size means reuse that copy's link.
 3. If there is no match, ask one question that names the destination and the size, and upload only after an explicit yes.
 4. If no Drive connector is present, say so and ask.
 
@@ -175,7 +175,7 @@ Top-level fields of `summary.json`:
 
 ## Running on Constrained Devices (Raspberry Pi & Edge SBCs)
 
-When running on an edge device like Sheila's Raspberry Pi (or any machine with $\le$ 4GB RAM), the skill automatically recognizes the `constrained` profile and enforces lean edge guards:
+When running on an edge device like a Raspberry Pi (or any machine with $\le$ 4GB RAM), the skill automatically recognizes the `constrained` profile and enforces lean edge guards:
 
 - **What an Edge Device / Pi CAN Do Fast**:
   1. **Metadata Probing**: Instant container and codec analysis via `ffprobe` (<50ms).
