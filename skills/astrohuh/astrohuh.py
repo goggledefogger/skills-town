@@ -35,6 +35,7 @@ def get_screens_dir():
     return fallback
 
 SHOTS = get_screens_dir()
+PREFIX = "astrohuh-"
 BRANCH = "issue-screens"
 
 
@@ -182,7 +183,7 @@ def last_recent_shot(max_age_seconds=180):
     now = time.time()
     candidates = []
     for f in os.listdir(SHOTS):
-        if f.startswith("astrohuh-") and f.endswith((".png", ".jpg", ".jpeg", ".webp")):
+        if f.startswith(PREFIX) and f.endswith((".png", ".jpg", ".jpeg", ".webp")):
             full = os.path.join(SHOTS, f)
             mtime = os.path.getmtime(full)
             if now - mtime <= max_age_seconds:
@@ -242,11 +243,11 @@ def grab(screen=False, crop=False):
 
     # 1. Explicit --screen: full-screen capture
     if screen:
-        return capture_to(os.path.join(SHOTS, f"astrohuh-{stamp}.png"), crop=False)
+        return capture_to(os.path.join(SHOTS, f"{PREFIX}{stamp}.png"), crop=False)
 
     # 2. Explicit --crop: interactive drag-select
     if crop:
-        out = os.path.join(SHOTS, f"astrohuh-{stamp}.png")
+        out = os.path.join(SHOTS, f"{PREFIX}{stamp}.png")
         fixture = os.environ.get("ASTROHUH_TEST_FIXTURE")
         if fixture:
             # tests stand in for the drag-select so nothing pops over the live screen
@@ -268,7 +269,7 @@ def grab(screen=False, crop=False):
             print(img["file_path"])
             return
         ext = img.get("media_type", "image/png").split("/")[-1].replace("jpeg", "jpg")
-        out = os.path.join(SHOTS, f"astrohuh-{stamp}.{ext}")
+        out = os.path.join(SHOTS, f"{PREFIX}{stamp}.{ext}")
         with open(out, "wb") as f:
             f.write(base64.b64decode(img["data"]))
         print(out)
