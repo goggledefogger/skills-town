@@ -1,6 +1,6 @@
 ---
 name: astrohuh
-description: Report something in Astrolabe that made the member go "huh" (a modal, tooltip, message or feature that reads unclear) for the people who build Astrolabe: a GitHub issue when the member can file there, otherwise a report kept in Astrolabe's own reports. Use when the member presses the AstroHuh card, types /astrohuh, says "report this", "this is confusing, file it", or provides an Astrolabe screenshot.
+description: Report something in Astrolabe that made the member go "huh" (a modal, tooltip, message or feature that reads unclear) for the people who build Astrolabe, as a GitHub issue when the member can file there, otherwise a report kept in Astrolabe's own reports. Use when the member presses the AstroHuh card, types /astrohuh, says "report this", "this is confusing, file it", or provides an Astrolabe screenshot.
 ---
 
 # AstroHuh

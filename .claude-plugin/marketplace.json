@@ -66,7 +66,7 @@
     {
       "name": "astrohuh",
       "source": "./skills/astrohuh",
-      "version": "1.2.0",
+      "version": "1.2.1",
       "license": "MIT",
       "description": "Something in Astrolabe made you go huh? Point at it, and AstroHuh drafts a GitHub issue for Dan and Danny to read, with one approval to file."
     }

@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.2.1
+Fixed the skill's description, which broke its header so installers skipped it (2026-11-04).
+
 ## [1.2.0] - 2026-11-04
 ### Changed
 - Renamed to AstroHuh. The command is now `/astrohuh` (and `/astrohuh check`).
