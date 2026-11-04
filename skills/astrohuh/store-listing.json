@@ -17,7 +17,7 @@
   "changes": [
     {
       "version": "1.2.0",
-      "note": "Now called AstroHuh, started with /astrohuh. Before you say yes it tells you who reads the report, and it says plainly when your GitHub account can't file there."
+      "note": "Now called AstroHuh, started with /astrohuh. Before you say yes it tells you who reads the report, and when your GitHub account can't file there it keeps the report in Astrolabe's own reports instead."
     },
     {
       "version": "1.0.0",
@@ -28,7 +28,7 @@
       "note": "Reuses the 'Make it yours' in-place pattern without starting a new chat: drag-select crop on a Mac desktop, or paste a screenshot (works anywhere, including a phone), and names missing dependencies."
     }
   ],
-  "desc": "Free, and part of the members' skills library. Something in Astrolabe made you go huh? Drag-select it on a Mac, or paste a screenshot (works anywhere, including a phone). AstroHuh finds where it lives in the code and drafts a GitHub issue. It goes to Astrolabe's GitHub issues, under your GitHub account, so filing needs an account with access to the Astrolabe repo. Dan and Danny read every one. Some can be fixed soon, some can't. You see the whole draft first, anything private gets cropped out, and nothing is sent until you say yes. Built on GitHub CLI gh (https://cli.github.com, MIT license) and screencapture on macOS.",
+  "desc": "Free, and part of the members' skills library. Something in Astrolabe made you go huh? Drag-select it on a Mac, or paste a screenshot (works anywhere, including a phone). AstroHuh finds where it lives in the code and drafts the report. With access to the Astrolabe repo it files a GitHub issue under your account. Without it, the report is kept in Astrolabe's own reports on this computer, the same place the Tell Dan and Danny button keeps them. Dan and Danny read every report that reaches them. Some can be fixed soon, some can't. You see the whole draft first, anything private gets cropped out, and nothing is sent until you say so. Built on GitHub CLI gh (https://cli.github.com, MIT license), screencapture on macOS, and Astrolabe's own report sheet.",
   "bio": "Danny teaches the course Astrolabe came out of. He built this to keep feedback loops frictionless without leaving the screen.",
   "cta": "Get this skill",
   "plugin": "astrohuh@skills-town",
@@ -42,7 +42,7 @@
     "marketplace": "goggledefogger/skills-town",
     "eta": 15,
     "updates": "Auto-updates once that marketplace has it switched on; on any other agent, updating the skill file brings the next version.",
-    "touches": "Adds the skill to your notes folder's skills, plus the Claude Code plugin if Claude Code is here, and a card to your Astrolabe rituals shelf. Reads captured screenshots in tools/screens and creates GitHub issues via gh. Writes nothing into your notes.",
+    "touches": "Adds the skill to your notes folder's skills, plus the Claude Code plugin if Claude Code is here, and a card to your Astrolabe rituals shelf. Reads captured screenshots in tools/screens and creates GitHub issues via gh. Writes nothing into your notes. Without GitHub access it saves the report in Astrolabe's reports on this computer.",
     "ritual": {
       "id": "astrohuh",
       "label": "AstroHuh",

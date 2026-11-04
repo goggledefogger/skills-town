@@ -4,6 +4,8 @@
   astrohuh.py check                                   -> checks dependencies and auth
   astrohuh.py grab [--screen] [--crop]               -> prints the saved screenshot path
   astrohuh.py file REPO TITLE BODY_MD IMAGE [LABEL]  -> prints the issue URL
+  astrohuh.py draft BODY_MD                          -> Astrolabe report draft: prints {draft, payload_json}
+  astrohuh.py save DRAFT_ID                          -> keeps that exact draft in Astrolabe's reports, prints the ref
 
 grab checks for a recent shot in tools/screens in the last 180 s, then checks
 pasted images from the session transcript. With --crop on macOS, it triggers
@@ -232,6 +234,22 @@ def file_issue(repo, title, body_path, image, label=None):
     print(gh(*args))
 
 
+def astrolabe(route, body):
+    # The member's own report outbox (Astrolabe's "Tell Dan and Danny" sheet).
+    # Desk-only routes on the loopback; a draft is what the member is shown,
+    # and save keeps that exact string. Nothing here sends anything off the machine
+    import urllib.request
+    port = os.environ.get("ASTROLABE_PORT", "27246")
+    req = urllib.request.Request(f"http://127.0.0.1:{port}/api/report/{route}",
+                                 data=json.dumps(body).encode(), method="POST",
+                                 headers={"content-type": "application/json"})
+    try:
+        with urllib.request.urlopen(req, timeout=20) as r:
+            return json.load(r)
+    except Exception as e:
+        raise SystemExit(f"Astrolabe's reports are not reachable here ({e}). Is the dashboard running?")
+
+
 if __name__ == "__main__":
     args = sys.argv[1:]
     if not args or args[0] == "check":
@@ -242,5 +260,13 @@ if __name__ == "__main__":
         grab(screen="--screen" in args, crop="--crop" in args)
     elif args[0] == "file" and len(args) >= 5:
         file_issue(*args[1:6])
+    elif args[0] == "draft" and len(args) == 2:
+        with open(args[1]) as f:
+            words = f.read()
+        tab = os.environ.get("ASTROLABE_TAB_ID")
+        d = astrolabe("draft", {"words": words, **({"tab": tab} if tab else {})})
+        print(json.dumps({"draft": d.get("draft"), "payload_json": d.get("payload_json")}, indent=2))
+    elif args[0] == "save" and len(args) == 2:
+        print(astrolabe("save", {"draft": args[1]}).get("ref") or "not saved")
     else:
         raise SystemExit(__doc__)

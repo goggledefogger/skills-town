@@ -6,6 +6,7 @@
 - The `/confusing` alias is removed.
 - Before asking, the skill tells the member who reads a report and what to expect.
 - Says plainly when the member's GitHub account cannot file to that repo.
+- When it can't, the report is kept in Astrolabe's own reports on this computer (`astrohuh.py draft` and `save`), the same place the Tell Dan and Danny button keeps them.
 
 ## [1.1.0] - 2026-11-03
 ### Added
