@@ -74,7 +74,11 @@ def capture_plan(crop, platform=None, which=shutil.which):
         if which("screencapture"):
             return {"name": "screencapture", "argv": ["screencapture", "-i", "-s", "-x", "{out}"] if crop else ["screencapture", "-x", "{out}"]}
     elif platform.startswith("win"):
-        ps = which("powershell") or which("pwsh")
+        # Windows searches the current folder before PATH, so a planted powershell.exe
+        # in the brain would win; prefer the system copy by its absolute path
+        sys_ps = os.path.join(os.environ.get("SystemRoot", r"C:\Windows"), "System32", "WindowsPowerShell", "v1.0", "powershell.exe")
+        ps = sys_ps if os.path.isfile(sys_ps) else next((w for w in (which("powershell"), which("pwsh"))
+                                                         if w and os.path.dirname(os.path.abspath(w)) != os.getcwd()), None)
         if ps:
             return {"name": "Snipping Tool" if crop else "PowerShell", "env": True,
                     "argv": [ps, "-NoProfile", "-STA", "-Command", PS_CROP if crop else PS_SCREEN]}
