@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.3.0
+Works on Windows and Linux too: drag-select uses the computer's own screenshot tool (Snipping Tool, or gnome-screenshot, grim and slurp, maim and friends).
+`check` reports which capture route this computer has.
+
 ## 1.2.1
 Fixed the skill's description, which broke its header so installers skipped it (2026-11-04).
 

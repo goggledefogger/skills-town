@@ -1,5 +1,5 @@
 ---
-description: Report something in Astrolabe that made you go huh: drag-select crop on a Mac desktop, or paste a screenshot (works anywhere, including a phone), with code diagnosis
+description: Report something in Astrolabe that made you go huh: drag-select it on your screen (Mac, Windows or Linux), or paste a screenshot (works anywhere, including a phone), with code diagnosis
 argument-hint: "[optional description or words]"
 ---
 
