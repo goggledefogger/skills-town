@@ -62,6 +62,13 @@
       "version": "1.1.1",
       "license": "MIT",
       "description": "Scrappy progressive multi-pass video understanding: accepts any link or media file, extracts metadata, keyframes, contact sheets, subtitles, and audio."
+    },
+    {
+      "name": "report-confusion",
+      "source": "./skills/report-confusion",
+      "version": "1.1.0",
+      "license": "MIT",
+      "description": "Report an Astrolabe confusion as a GitHub issue: in-place drag-select screenshot crop, code diagnosis, and one approval to file."
     }
   ]
 }

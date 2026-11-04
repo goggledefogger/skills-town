@@ -1,0 +1,67 @@
+{
+  "id": "report-confusion",
+  "stage": "staged",
+  "audience": [
+    "danny"
+  ],
+  "category": "skills",
+  "title": "Confusing",
+  "label": "Confusing, a skill for reporting Astrolabe moments that read unclear",
+  "creator": "Danny",
+  "agent": "Roy",
+  "creatorRole": "who teaches the course Astrolabe came out of",
+  "verb": "Made by",
+  "promise": "One-click confusion reporting: in-place drag-to-select screenshot crop, code diagnosis, and a clean GitHub issue filed with one approval.",
+  "minutes": "a skill for any assistant",
+  "price": "Free",
+  "hero": {
+    "src": "/store-art/report-confusion.jpg",
+    "alt": "A cropped Astrolabe UI element with an issue draft showing code location and a single approval button",
+    "from": "https://github.com/goggledefogger/skills-town/blob/main/skills/report-confusion/docs/hero.jpg",
+    "crop": "1920x1080+0+0",
+    "version": "1.1.0"
+  },
+  "changes": [
+    {
+      "version": "1.0.0",
+      "note": "First release: files Astrolabe confusions as GitHub issues from screenshots."
+    },
+    {
+      "version": "1.1.0",
+      "note": "Reuses the 'Make it yours' in-place pattern: triggers drag-to-select crop without starting a new chat, works cross-platform and mobile, and names missing dependencies."
+    }
+  ],
+  "desc": "Free, and part of the members' skills library. Found something in Astrolabe that reads unclear? Operates in place without switching to a new chat tab: drag to select and crop the confusing area, diagnoses the file:line in code, and drafts a clean GitHub issue filed after exactly one yes. Built on GitHub CLI gh (MIT license) and native canvas/screencapture pointer events.",
+  "bio": "Danny teaches the course Astrolabe came out of. He built this to keep feedback loops frictionless without leaving the screen.",
+  "cta": "Get this skill",
+  "plugin": "report-confusion@skills-town",
+  "install": {
+    "preview": "Read the skill first: https://github.com/goggledefogger/skills-town/tree/main/skills/report-confusion",
+    "steps": [
+      "add the Confusing skill to your notes folder, so every assistant has it",
+      "if Claude Code is here, also add the plugin marketplace goggledefogger/skills-town and install report-confusion",
+      "pin the Confusing button to your Astrolabe rituals shelf"
+    ],
+    "marketplace": "goggledefogger/skills-town",
+    "eta": 15,
+    "updates": "Auto-updates once that marketplace has it switched on; on any other agent, updating the skill file brings the next version.",
+    "touches": "Adds the skill to your notes folder's skills, plus the Claude Code plugin if Claude Code is here, and a card to your Astrolabe rituals shelf. Reads captured screenshots in tools/screens and creates GitHub issues via gh. Writes nothing into your notes.",
+    "ritual": {
+      "id": "report-confusion",
+      "label": "Confusing",
+      "icon": "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M17 17a7 7 0 1 1 10 6.3c-2 1-3 2.4-3 4.7\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\"/><circle cx=\"24\" cy=\"35\" r=\"2\" fill=\"currentColor\"/><path d=\"M8 10h6M8 10v6M40 10h-6M40 10v6M8 38h6M8 38v-6M40 38h-6M40 38v-6\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\"/></svg>",
+      "target": "active",
+      "inPlace": true,
+      "phrase": "Report an Astrolabe confusion: grab the screenshot, find where it lives in the code, and draft the issue.",
+      "activePhrase": "Check report-confusion dependencies and tell me what is ready.",
+      "command": "/report-confusion",
+      "activeCommand": "/report-confusion check",
+      "accent": "purple",
+      "desc": "Something in Astrolabe read unclear? In-place drag-crop screenshot, where it lives in the code, one yes to file the issue.",
+      "app": {
+        "bg": "linear-gradient(135deg,#3b2f8f,#c2477a)",
+        "mark": "<path d='M17 17a7 7 0 1 1 10 6.3c-2 1-3 2.4-3 4.7' fill='none' stroke='white' stroke-width='3.5' stroke-linecap='round'/><circle cx='24' cy='35' r='2.4' fill='white'/><path d='M8 10h6M8 10v6M40 10h-6M40 10v6M8 38h6M8 38v-6M40 38h-6M40 38v-6' stroke='white' stroke-width='2.5' stroke-linecap='round'/>"
+      }
+    }
+  }
+}
