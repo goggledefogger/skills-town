@@ -252,8 +252,11 @@ async function main(): Promise<void> {
       await js(`${q(sel)}.scrollIntoView({ behavior: 'smooth', block: 'center' })`)
       await wait(600)
       await js(CURSOR)
+      // a page that zooms its root (html { zoom: 1.15 }) scales a fixed child's left/top
+      // again, so the rect has to be divided out of the zoom or the dot lands low and right
       await js(`(() => { const r = ${q(sel)}.getBoundingClientRect(); const c = document.getElementById('wt-cursor')
-        c.style.left = (r.left + Math.min(r.width / 2, 120)) + 'px'; c.style.top = (r.top + r.height / 2) + 'px' })()`)
+        const z = parseFloat(getComputedStyle(document.documentElement).zoom) || 1
+        c.style.left = ((r.left + Math.min(r.width / 2, 120)) / z) + 'px'; c.style.top = ((r.top + r.height / 2) / z) + 'px' })()`)
       await wait(750)
     }
     async function press(sel: string): Promise<void> {
