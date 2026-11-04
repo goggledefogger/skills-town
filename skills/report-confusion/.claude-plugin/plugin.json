@@ -1,9 +1,0 @@
-{
-  "name": "report-confusion",
-  "description": "Report an Astrolabe confusion as a GitHub issue: drag-select crop on a Mac desktop, or paste a screenshot (works anywhere, including a phone), with code diagnosis and one approval to file.",
-  "author": {
-    "name": "goggledefogger"
-  },
-  "license": "MIT",
-  "version": "1.1.0"
-}

@@ -53,7 +53,7 @@ Or add as a Claude Code plugin marketplace:
 | [playwright-browser-bridge](skills/playwright-browser-bridge/) | The shared browser layer the two browser skills build on — careful by default. |
 | [walkthrough-video](skills/walkthrough-video/) | Make a captioned how-to video of any web app from one script: it records the real screens and adds title cards and captions. Re-run it after the app changes for a fresh video. |
 | [scrappy-video-understanding](skills/scrappy-video-understanding/) | Scrappy multi-pass video understanding: takes any video link or file, grabs keyframes and contact sheets, pulls audio/subtitles, and explains what happened. |
-| [report-confusion](skills/report-confusion/) | Report an Astrolabe confusion with in-place drag-select screenshot crop, code diagnosis, and one approval to file. |
+| [astrohuh](skills/astrohuh/) | Something in Astrolabe made you go huh? Point at it, and AstroHuh drafts a GitHub issue for Dan and Danny to read, with one approval to file. |
 
 ## The audit gate
 
