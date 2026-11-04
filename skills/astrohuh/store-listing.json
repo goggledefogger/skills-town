@@ -1,27 +1,24 @@
 {
-  "id": "report-confusion",
+  "id": "astrohuh",
   "stage": "staged",
   "audience": [
     "danny"
   ],
   "category": "skills",
-  "title": "Confusing",
-  "label": "Confusing, a skill for reporting Astrolabe moments that read unclear",
+  "title": "AstroHuh",
+  "label": "AstroHuh",
   "creator": "Danny",
   "agent": "Roy",
   "creatorRole": "who teaches the course Astrolabe came out of",
   "verb": "Made by",
-  "promise": "One-click confusion reporting: drag-select crop on a Mac desktop, or paste a screenshot (works anywhere, including a phone), with code diagnosis and a clean GitHub issue filed with one approval.",
+  "promise": "Something in Astrolabe made you go huh? Point at it, and AstroHuh drafts a report for Dan and Danny to read.",
   "minutes": "a skill for any assistant",
   "price": "Free",
-  "hero": {
-    "src": "/store-art/report-confusion.jpg",
-    "alt": "A cropped Astrolabe UI element with an issue draft showing code location and a single approval button",
-    "from": "https://github.com/goggledefogger/skills-town/blob/main/skills/report-confusion/docs/hero.jpg",
-    "crop": "1920x1080+0+0",
-    "version": "1.1.0"
-  },
   "changes": [
+    {
+      "version": "1.2.0",
+      "note": "Now called AstroHuh, started with /astrohuh. Before you say yes it tells you who reads the report, and it says plainly when your GitHub account can't file there."
+    },
     {
       "version": "1.0.0",
       "note": "First release: files Astrolabe confusions as GitHub issues from screenshots."
@@ -31,33 +28,33 @@
       "note": "Reuses the 'Make it yours' in-place pattern without starting a new chat: drag-select crop on a Mac desktop, or paste a screenshot (works anywhere, including a phone), and names missing dependencies."
     }
   ],
-  "desc": "Free, and part of the members' skills library. Found something in Astrolabe that reads unclear? Operates in place without switching to a new chat tab: drag-select crop on a Mac desktop, or paste a screenshot (works anywhere, including a phone). Diagnoses the file:line in code, and drafts a clean GitHub issue filed after exactly one yes. Built on GitHub CLI gh (MIT license) and screencapture on macOS.",
+  "desc": "Free, and part of the members' skills library. Something in Astrolabe made you go huh? Drag-select it on a Mac, or paste a screenshot (works anywhere, including a phone). AstroHuh finds where it lives in the code and drafts a GitHub issue. It goes to Astrolabe's GitHub issues, under your GitHub account, so filing needs an account with access to the Astrolabe repo. Dan and Danny read every one. Some can be fixed soon, some can't. You see the whole draft first, anything private gets cropped out, and nothing is sent until you say yes. Built on GitHub CLI gh (https://cli.github.com, MIT license) and screencapture on macOS.",
   "bio": "Danny teaches the course Astrolabe came out of. He built this to keep feedback loops frictionless without leaving the screen.",
   "cta": "Get this skill",
-  "plugin": "report-confusion@skills-town",
+  "plugin": "astrohuh@skills-town",
   "install": {
-    "preview": "Read the skill first: https://github.com/goggledefogger/skills-town/tree/main/skills/report-confusion",
+    "preview": "Read the skill first: https://github.com/goggledefogger/skills-town/tree/main/skills/astrohuh",
     "steps": [
-      "add the Confusing skill to your notes folder, so every assistant has it",
-      "if Claude Code is here, also add the plugin marketplace goggledefogger/skills-town and install report-confusion",
-      "pin the Confusing button to your Astrolabe rituals shelf"
+      "add the AstroHuh skill to your notes folder, so every assistant has it",
+      "if Claude Code is here, also add the plugin marketplace goggledefogger/skills-town and install astrohuh",
+      "pin the AstroHuh button to your Astrolabe rituals shelf"
     ],
     "marketplace": "goggledefogger/skills-town",
     "eta": 15,
     "updates": "Auto-updates once that marketplace has it switched on; on any other agent, updating the skill file brings the next version.",
     "touches": "Adds the skill to your notes folder's skills, plus the Claude Code plugin if Claude Code is here, and a card to your Astrolabe rituals shelf. Reads captured screenshots in tools/screens and creates GitHub issues via gh. Writes nothing into your notes.",
     "ritual": {
-      "id": "report-confusion",
-      "label": "Confusing",
+      "id": "astrohuh",
+      "label": "AstroHuh",
       "icon": "<svg viewBox=\"0 0 48 48\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M17 17a7 7 0 1 1 10 6.3c-2 1-3 2.4-3 4.7\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\"/><circle cx=\"24\" cy=\"35\" r=\"2\" fill=\"currentColor\"/><path d=\"M8 10h6M8 10v6M40 10h-6M40 10v6M8 38h6M8 38v-6M40 38h-6M40 38v-6\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\"/></svg>",
       "target": "active",
       "inPlace": true,
       "phrase": "Report an Astrolabe confusion: grab the screenshot, find where it lives in the code, and draft the issue.",
-      "activePhrase": "Check report-confusion dependencies and tell me what is ready.",
-      "command": "/report-confusion",
-      "activeCommand": "/report-confusion check",
+      "activePhrase": "Check what AstroHuh needs and tell me what is ready.",
+      "command": "/astrohuh",
+      "activeCommand": "/astrohuh check",
       "accent": "purple",
-      "desc": "Something in Astrolabe read unclear? Drag-select crop on a Mac desktop, or paste a screenshot (works anywhere, including a phone), with code diagnosis and one yes to file.",
+      "desc": "Something in Astrolabe made you go huh? Point at it, and AstroHuh drafts a report for Dan and Danny to read.",
       "app": {
         "bg": "linear-gradient(135deg,#3b2f8f,#c2477a)",
         "mark": "<path d='M17 17a7 7 0 1 1 10 6.3c-2 1-3 2.4-3 4.7' fill='none' stroke='white' stroke-width='3.5' stroke-linecap='round'/><circle cx='24' cy='35' r='2.4' fill='white'/><path d='M8 10h6M8 10v6M40 10h-6M40 10v6M8 38h6M8 38v-6M40 38h-6M40 38v-6' stroke='white' stroke-width='2.5' stroke-linecap='round'/>"

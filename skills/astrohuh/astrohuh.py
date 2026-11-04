@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
-"""Report an Astrolabe confusion as a GitHub issue.
+"""Report something in Astrolabe that made you go huh, as a GitHub issue.
 
-  confusion.py check                                   -> checks dependencies and auth
-  confusion.py grab [--screen] [--crop]               -> prints the saved screenshot path
-  confusion.py file REPO TITLE BODY_MD IMAGE [LABEL]  -> prints the issue URL
+  astrohuh.py check                                   -> checks dependencies and auth
+  astrohuh.py grab [--screen] [--crop]               -> prints the saved screenshot path
+  astrohuh.py file REPO TITLE BODY_MD IMAGE [LABEL]  -> prints the issue URL
 
 grab checks for a recent shot in tools/screens in the last 180 s, then checks
 pasted images from the session transcript. With --crop on macOS, it triggers
 interactive drag-to-select capture. With --screen it captures full screen. If
 neither was passed and no screenshot is found, it exits with instructions.
-CONFUSION_TEST_FIXTURE=<png> makes --crop copy that file instead of capturing.
+ASTROHUH_TEST_FIXTURE=<png> makes --crop copy that file instead of capturing.
 
 file uploads the image to the repo's `issue-screens` branch (no workflows run
 there) and embeds it in the created GitHub issue.
@@ -67,13 +67,13 @@ def check_deps():
 
 
 def last_recent_shot(max_age_seconds=180):
-    """Find a confusion-* screenshot saved to tools/screens in the last few minutes."""
+    """Find an astrohuh-* screenshot saved to tools/screens in the last few minutes."""
     if not os.path.isdir(SHOTS):
         return None
     now = time.time()
     candidates = []
     for f in os.listdir(SHOTS):
-        if f.startswith("confusion-") and f.endswith((".png", ".jpg", ".jpeg", ".webp")):
+        if f.startswith("astrohuh-") and f.endswith((".png", ".jpg", ".jpeg", ".webp")):
             full = os.path.join(SHOTS, f)
             mtime = os.path.getmtime(full)
             if now - mtime <= max_age_seconds:
@@ -133,7 +133,7 @@ def grab(screen=False, crop=False):
 
     # 1. If explicit --screen requested, run full-screen capture
     if screen:
-        out = os.path.join(SHOTS, f"confusion-{stamp}.png")
+        out = os.path.join(SHOTS, f"astrohuh-{stamp}.png")
         if shutil.which("screencapture"):
             subprocess.run(["screencapture", "-x", out], check=True)
             print(out)
@@ -143,8 +143,8 @@ def grab(screen=False, crop=False):
 
     # 2. If explicit --crop requested, run interactive drag-select crosshair
     if crop:
-        out = os.path.join(SHOTS, f"confusion-{stamp}.png")
-        fixture = os.environ.get("CONFUSION_TEST_FIXTURE")
+        out = os.path.join(SHOTS, f"astrohuh-{stamp}.png")
+        fixture = os.environ.get("ASTROHUH_TEST_FIXTURE")
         if fixture:
             # tests stand in for the drag-select so nothing pops over the live screen
             shutil.copyfile(fixture, out)
@@ -175,7 +175,7 @@ def grab(screen=False, crop=False):
             print(img["file_path"])
             return
         ext = img.get("media_type", "image/png").split("/")[-1].replace("jpeg", "jpg")
-        out = os.path.join(SHOTS, f"confusion-{stamp}.{ext}")
+        out = os.path.join(SHOTS, f"astrohuh-{stamp}.{ext}")
         with open(out, "wb") as f:
             f.write(base64.b64decode(img["data"]))
         print(out)

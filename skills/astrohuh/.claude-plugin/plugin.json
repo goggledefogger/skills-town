@@ -1,0 +1,9 @@
+{
+  "name": "astrohuh",
+  "description": "Something in Astrolabe made you go huh? Point at it, and AstroHuh drafts a GitHub issue for Dan and Danny to read: drag-select crop on a Mac, or paste a screenshot, with one approval to file.",
+  "author": {
+    "name": "goggledefogger"
+  },
+  "license": "MIT",
+  "version": "1.2.0"
+}
