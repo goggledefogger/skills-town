@@ -11,19 +11,17 @@ Operates in place without switching away or opening unnecessary chat tabs.
 
 ## 1. Requirements Check
 
-If running for the first time or diagnosing errors, check dependencies:
-`python3 .agents/skills/report-confusion/confusion.py check`
+If running for the first time or diagnosing errors, check dependencies using `confusion.py check` in this skill's own folder (under Claude Code, `${CLAUDE_PLUGIN_ROOT}/confusion.py`).
 
 Requires `gh` (GitHub CLI) installed and authenticated (`gh auth login`).
 
 ## 2. Screenshot
 
-- **In-app canvas crop (Astrolabe web/mobile)**: The in-place tool saves the user's drag selection directly to `tools/screens/confusion-*.png`.
-- **Pasted in message**: An image was attached or pasted in this chat session.
-- **Interactive drag-select on desktop**: `python3 .agents/skills/report-confusion/confusion.py grab --crop` (turns cursor into a crosshair to drag and crop the exact region).
-- **Full screen capture**: `python3 .agents/skills/report-confusion/confusion.py grab --screen`.
+- **Drag-select crop on a Mac desktop**: run `confusion.py grab --crop` in this skill's own folder (under Claude Code, `${CLAUDE_PLUGIN_ROOT}/confusion.py`). Turns the cursor into a crosshair to drag and crop the exact region.
+- **Paste a screenshot (works anywhere, including a phone)**: attach or paste an image in this chat session, then run `confusion.py grab`.
+- **Full screen capture**: run `confusion.py grab --screen`.
 
-Run from the brain root. It prints the saved image path.
+It prints the saved image path.
 
 ## 3. Where in the app
 
@@ -49,12 +47,10 @@ Extra words from the member go in "What I saw" before filing.
 
 ## 5. File
 
-Check that GitHub CLI is authenticated as the appropriate user, then:
-
-`python3 .agents/skills/report-confusion/confusion.py file <repo> "<title>" <body.md> <image> what-is-this`
+Check that GitHub CLI is authenticated as the appropriate user, then run `confusion.py file <repo> "<title>" <body.md> <image> what-is-this` in this skill's own folder (under Claude Code, `${CLAUDE_PLUGIN_ROOT}/confusion.py`).
 
 Write the body to a temp file first. Print the issue link in one line.
 Glance for anything private on screen (a note's contents, an email) and crop or ask before filing. Do not fix the code in this flow unless requested.
 
 ## Attribution
-Built on GitHub CLI `gh` (MIT license) and native Pointer Events / canvas capture.
+Built on GitHub CLI `gh` (MIT license) and `screencapture` on macOS.

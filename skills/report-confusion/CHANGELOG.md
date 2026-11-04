@@ -2,9 +2,8 @@
 
 ## [1.1.0] - 2026-11-03
 ### Added
-- Reuses the "Make it yours" in-place pattern: stays in the active view and chat without spawning a new chat tab.
-- Drag-to-select area crop: interactive rectangle selection instead of full-screen grabs.
-- Cross-platform and mobile support: handles web and mobile touch pointer crops dropped into `tools/screens/`, with CLI interactive capture fallback on desktop.
+- Reuses the "Make it yours" in-place pattern: stays in the active view and chat without starting a new chat tab.
+- Drag-select crop on a Mac desktop, or paste a screenshot (works anywhere, including a phone).
 - Dependency check command (`confusion.py check` / `/report-confusion check`) that names missing requirements before filing.
 - Store listing metadata (`store-listing.json`), Claude Code plugin manifest (`plugin.json`), and slash commands.
 - Clear attribution for GitHub CLI `gh`.

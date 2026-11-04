@@ -5,10 +5,11 @@
   confusion.py grab [--screen] [--crop]               -> prints the saved screenshot path
   confusion.py file REPO TITLE BODY_MD IMAGE [LABEL]  -> prints the issue URL
 
-grab checks for an in-place canvas crop dropped into tools/screens in the last
-two minutes, then checks pasted images from the session transcript. With --crop
-or when running interactively on macOS, it triggers interactive drag-to-select
-capture. With --screen it captures full screen.
+grab checks for a recent shot in tools/screens in the last 180 s, then checks
+pasted images from the session transcript. With --crop on macOS, it triggers
+interactive drag-to-select capture. With --screen it captures full screen. If
+neither was passed and no screenshot is found, it exits with instructions.
+CONFUSION_TEST_FIXTURE=<png> makes --crop copy that file instead of capturing.
 
 file uploads the image to the repo's `issue-screens` branch (no workflows run
 there) and embeds it in the created GitHub issue.
@@ -56,7 +57,7 @@ def check_deps():
 
     # 2. Screenshot capabilities
     has_screencapture = bool(shutil.which("screencapture"))
-    status["details"]["screencapture"] = "Available (macOS)" if has_screencapture else "Unavailable (rely on in-app canvas crop or file upload)"
+    status["details"]["screencapture"] = "Available (macOS)" if has_screencapture else "Unavailable (paste a screenshot instead)"
     
     # 3. Screens directory
     os.makedirs(SHOTS, exist_ok=True)
@@ -66,7 +67,7 @@ def check_deps():
 
 
 def last_recent_shot(max_age_seconds=180):
-    """Find recent screenshot dropped by Astrolabe in-place canvas crop."""
+    """Find a confusion-* screenshot saved to tools/screens in the last few minutes."""
     if not os.path.isdir(SHOTS):
         return None
     now = time.time()
@@ -140,15 +141,36 @@ def grab(screen=False, crop=False):
         else:
             raise SystemExit("screencapture is not available on this platform for --screen")
 
-    # 2. Check if Astrolabe already saved an in-place canvas crop
+    # 2. If explicit --crop requested, run interactive drag-select crosshair
+    if crop:
+        out = os.path.join(SHOTS, f"confusion-{stamp}.png")
+        fixture = os.environ.get("CONFUSION_TEST_FIXTURE")
+        if fixture:
+            # tests stand in for the drag-select so nothing pops over the live screen
+            shutil.copyfile(fixture, out)
+            print(out)
+            return
+        if shutil.which("screencapture"):
+            r = subprocess.run(["screencapture", "-i", "-s", "-x", out])
+            if r.returncode == 0 and os.path.exists(out) and os.path.getsize(out) > 0:
+                print(out)
+                return
+            else:
+                if os.path.exists(out) and os.path.getsize(out) == 0:
+                    os.remove(out)
+                raise SystemExit("Interactive capture cancelled or empty.")
+        else:
+            raise SystemExit("screencapture is not available on this platform for --crop")
+
+    # 3. No flags: check recent shot (within 180s)
     recent = last_recent_shot(max_age_seconds=180)
-    if recent and not crop:
+    if recent:
         print(recent)
         return
 
-    # 3. Check for pasted image in transcript
+    # 4. No flags: check for pasted image in transcript
     img = last_pasted_image()
-    if img and not crop:
+    if img:
         if "file_path" in img:
             print(img["file_path"])
             return
@@ -159,22 +181,8 @@ def grab(screen=False, crop=False):
         print(out)
         return
 
-    # 4. Fallback to interactive drag-select crosshair if screencapture is available
-    out = os.path.join(SHOTS, f"confusion-{stamp}.png")
-    if shutil.which("screencapture"):
-        # -i = interactive selection (mouse drag)
-        # -x = silent (no shutter sound)
-        r = subprocess.run(["screencapture", "-i", "-x", out])
-        if r.returncode == 0 and os.path.exists(out) and os.path.getsize(out) > 0:
-            print(out)
-            return
-        else:
-            # User might have hit ESC or cancelled
-            if os.path.exists(out) and os.path.getsize(out) == 0:
-                os.remove(out)
-            raise SystemExit("Interactive capture cancelled or empty.")
-    else:
-        raise SystemExit("No screenshot tool available on this platform. Please upload or paste a screenshot.")
+    # 5. grab with no flags and no screenshot found
+    raise SystemExit("No screenshot found: paste one, or run grab --crop / --screen")
 
 
 def gh(*args, data=None):

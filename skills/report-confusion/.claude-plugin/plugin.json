@@ -1,6 +1,6 @@
 {
   "name": "report-confusion",
-  "description": "Report an Astrolabe confusion as a GitHub issue: in-place drag-select screenshot crop, code diagnosis, and one approval to file.",
+  "description": "Report an Astrolabe confusion as a GitHub issue: drag-select crop on a Mac desktop, or paste a screenshot (works anywhere, including a phone), with code diagnosis and one approval to file.",
   "author": {
     "name": "goggledefogger"
   },

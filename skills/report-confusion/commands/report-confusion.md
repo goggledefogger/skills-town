@@ -1,5 +1,5 @@
 ---
-description: Report an Astrolabe confusion with in-place screenshot crop and code diagnosis
+description: Report an Astrolabe confusion: drag-select crop on a Mac desktop, or paste a screenshot (works anywhere, including a phone), with code diagnosis
 argument-hint: "[optional description or words]"
 ---
 
