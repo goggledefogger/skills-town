@@ -13,11 +13,13 @@ Operates in place without switching away or opening unnecessary chat tabs.
 
 If running for the first time or diagnosing errors, check dependencies using `astrohuh.py check` in this skill's own folder (under Claude Code, `${CLAUDE_PLUGIN_ROOT}/astrohuh.py`).
 
+Run the script with whichever of `python3`, `python` or `py -3` exists on this computer. `check` reports which screenshot route it has; with none, pasting a screenshot still works (on Linux, installing gnome-screenshot, or grim and slurp on Wayland, adds drag-select).
+
 Filing a GitHub issue needs `gh` (GitHub CLI) installed and authenticated (`gh auth login`). Keeping it in Astrolabe's reports needs only Astrolabe running.
 
 ## 2. Screenshot
 
-- **Drag-select crop on a Mac desktop**: run `astrohuh.py grab --crop` in this skill's own folder (under Claude Code, `${CLAUDE_PLUGIN_ROOT}/astrohuh.py`). Turns the cursor into a crosshair to drag and crop the exact region.
+- **Drag-select it on your screen (Mac, Windows or Linux)**: run `astrohuh.py grab --crop` in this skill's own folder (under Claude Code, `${CLAUDE_PLUGIN_ROOT}/astrohuh.py`). It uses the computer's own screenshot tool (screencapture on Mac, Snipping Tool on Windows, gnome-screenshot, grim and slurp, maim or similar on Linux) so you can drag the exact region.
 - **Paste a screenshot (works anywhere, including a phone)**: attach or paste an image in this chat session, then run `astrohuh.py grab`.
 - **Full screen capture**: run `astrohuh.py grab --screen`.
 
@@ -63,4 +65,4 @@ If `gh` reports the account cannot create issues on that repo (not found or perm
 Do not fix the code in this flow unless requested.
 
 ## Attribution
-Built on GitHub CLI `gh` (https://cli.github.com, MIT license), `screencapture` on macOS, and Astrolabe's own report sheet.
+Built on GitHub CLI `gh` (https://cli.github.com, MIT license), and Astrolabe's own report sheet. It captures with the computer's own screenshot tool (screencapture on Mac, Snipping Tool on Windows, or one of gnome-screenshot, grim, maim and friends on Linux).

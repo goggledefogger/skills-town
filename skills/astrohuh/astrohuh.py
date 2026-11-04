@@ -4,12 +4,15 @@
   astrohuh.py check                                   -> checks dependencies and auth
   astrohuh.py grab [--screen] [--crop]               -> prints the saved screenshot path
   astrohuh.py file REPO TITLE BODY_MD IMAGE [LABEL]  -> prints the issue URL
+  astrohuh.py selftest                               -> checks the capture-route picking
   astrohuh.py draft BODY_MD                          -> Astrolabe report draft: prints {draft, payload_json}
   astrohuh.py save DRAFT_ID                          -> keeps that exact draft in Astrolabe's reports, prints the ref
 
 grab checks for a recent shot in tools/screens in the last 180 s, then checks
-pasted images from the session transcript. With --crop on macOS, it triggers
-interactive drag-to-select capture. With --screen it captures full screen. If
+pasted images from the session transcript. With --crop it triggers
+interactive drag-to-select capture (Windows: Snipping Tool; Linux: the first of
+gnome-screenshot, spectacle, grim+slurp, maim, scrot, flameshot, import on PATH).
+With --screen it captures full screen. If
 neither was passed and no screenshot is found, it exits with instructions.
 ASTROHUH_TEST_FIXTURE=<png> makes --crop copy that file instead of capturing.
 
@@ -27,16 +30,124 @@ def get_screens_dir():
     rel_shots = os.path.abspath(os.path.join(SCRIPT_DIR, "..", "..", "..", "tools", "screens"))
     if os.path.isdir(rel_shots):
         return rel_shots
-    fallback = os.path.expanduser("~/.astrolabe/screens")
+    fallback = os.path.join(os.path.expanduser("~"), ".astrolabe", "screens")
     os.makedirs(fallback, exist_ok=True)
     return fallback
 
 SHOTS = get_screens_dir()
+PREFIX = "astrohuh-"
 BRANCH = "issue-screens"
 
 
 def run_cmd(args, stdin=None):
     return subprocess.run(args, input=stdin, capture_output=True, text=True)
+
+
+# Linux tools in preference order: (name, region argv, full-screen argv)
+# {out} is the file path; flameshot writes to stdout, which goes to the file
+LINUX_TOOLS = [
+    ("gnome-screenshot", ["gnome-screenshot", "-a", "-f", "{out}"], ["gnome-screenshot", "-f", "{out}"]),
+    ("spectacle", ["spectacle", "-r", "-b", "-n", "-o", "{out}"], ["spectacle", "-f", "-b", "-n", "-o", "{out}"]),
+    ("grim", ["grim", "-g", "{geom}", "{out}"], ["grim", "{out}"]),
+    ("maim", ["maim", "-s", "{out}"], ["maim", "{out}"]),
+    ("scrot", ["scrot", "-s", "{out}"], ["scrot", "{out}"]),
+    ("flameshot", ["flameshot", "gui", "--raw"], ["flameshot", "full", "--raw"]),
+    ("import", ["import", "{out}"], ["import", "-window", "root", "{out}"]),
+]
+
+PS_HEAD = "Add-Type -AssemblyName System.Windows.Forms; Add-Type -AssemblyName System.Drawing; $p=$env:ASTROHUH_OUT; "
+# Clipboard is cleared first so an old image is not mistaken for the new clip
+PS_CROP = PS_HEAD + (
+    "[Windows.Forms.Clipboard]::Clear(); Start-Process 'ms-screenclip:'; "
+    "for($i=0;$i -lt 120;$i++){Start-Sleep -Milliseconds 500; "
+    "if([Windows.Forms.Clipboard]::ContainsImage()){[Windows.Forms.Clipboard]::GetImage().Save($p,[Drawing.Imaging.ImageFormat]::Png); exit 0}}; exit 1")
+PS_SCREEN = PS_HEAD + (
+    "$v=[Windows.Forms.SystemInformation]::VirtualScreen; $b=New-Object Drawing.Bitmap $v.Width,$v.Height; "
+    "$g=[Drawing.Graphics]::FromImage($b); $g.CopyFromScreen($v.Left,$v.Top,0,0,$b.Size); "
+    "$b.Save($p,[Drawing.Imaging.ImageFormat]::Png)")
+
+
+def capture_plan(crop, platform=None, which=shutil.which):
+    """Pick the capture route: a dict with name and argv, or None if this machine has none."""
+    platform = platform or sys.platform
+    if platform == "darwin":
+        if which("screencapture"):
+            return {"name": "screencapture", "argv": ["screencapture", "-i", "-s", "-x", "{out}"] if crop else ["screencapture", "-x", "{out}"]}
+    elif platform.startswith("win"):
+        # Windows searches the current folder before PATH, so a planted powershell.exe
+        # in the brain would win; prefer the system copy by its absolute path
+        sys_ps = os.path.join(os.environ.get("SystemRoot", r"C:\Windows"), "System32", "WindowsPowerShell", "v1.0", "powershell.exe")
+        ps = sys_ps if os.path.isfile(sys_ps) else next((w for w in (which("powershell"), which("pwsh"))
+                                                         if w and os.path.dirname(os.path.abspath(w)) != os.getcwd()), None)
+        if ps:
+            return {"name": "Snipping Tool" if crop else "PowerShell", "env": True,
+                    "argv": [ps, "-NoProfile", "-STA", "-Command", PS_CROP if crop else PS_SCREEN]}
+    else:
+        for name, region, full in LINUX_TOOLS:
+            if not which(name):
+                continue
+            if name == "grim" and crop and not which("slurp"):
+                continue
+            return {"name": name + ("+slurp" if name == "grim" and crop else ""),
+                    "argv": region if crop else full, "stdout": name == "flameshot",
+                    "slurp": name == "grim" and crop}
+    return None
+
+
+def run_capture(plan, out):
+    argv = [a.replace("{out}", out) for a in plan["argv"]]
+    env = dict(os.environ, ASTROHUH_OUT=out) if plan.get("env") else None
+    if plan.get("slurp"):
+        geom = subprocess.run(["slurp"], capture_output=True, text=True).stdout.strip()
+        if not geom:
+            return False
+        argv = [geom if a == "{geom}" else a for a in argv]
+    if plan.get("stdout"):
+        with open(out, "wb") as f:
+            r = subprocess.run(argv, stdout=f)
+    else:
+        r = subprocess.run(argv, env=env)
+    return r.returncode == 0 and os.path.exists(out) and os.path.getsize(out) > 0
+
+
+def capture_to(out, crop):
+    plan = capture_plan(crop)
+    if not plan:
+        raise SystemExit("No screenshot tool found on this computer: paste a screenshot into the chat instead. "
+                         + install_hint())
+    if run_capture(plan, out):
+        print(out)
+        return
+    if os.path.exists(out) and os.path.getsize(out) == 0:
+        os.remove(out)
+    raise SystemExit("Capture cancelled or empty." if crop else "Screen capture failed.")
+
+
+def install_hint():
+    if sys.platform == "darwin" or sys.platform.startswith("win"):
+        return "Pasting a screenshot always works."
+    return "To enable capture here, install gnome-screenshot (or grim and slurp on Wayland)."
+
+
+def selftest():
+    def pick(crop, plat, *tools):
+        return capture_plan(crop, plat, lambda n: "/bin/" + n if n in tools else None)
+    assert pick(True, "darwin", "screencapture")["argv"][:2] == ["screencapture", "-i"]
+    assert pick(False, "darwin", "screencapture")["argv"][:2] == ["screencapture", "-x"]
+    assert pick(True, "darwin") is None
+    c = pick(True, "win32", "powershell")
+    assert c["name"] == "Snipping Tool" and "-STA" in c["argv"] and "ms-screenclip:" in c["argv"][-1]
+    s = pick(False, "win32", "pwsh")
+    assert s["argv"][0] == "/bin/pwsh" and "CopyFromScreen" in s["argv"][-1]
+    g = pick(True, "linux", "grim", "slurp", "scrot")
+    assert g["name"] == "grim+slurp" and g["slurp"] and g["argv"][0] == "grim"
+    assert pick(True, "linux", "grim", "maim")["name"] == "maim"  # grim without slurp is skipped
+    assert pick(True, "linux", "maim")["argv"] == ["maim", "-s", "{out}"]
+    assert pick(False, "linux", "maim")["argv"] == ["maim", "{out}"]
+    assert pick(True, "linux", "gnome-screenshot", "maim")["name"] == "gnome-screenshot"
+    assert pick(True, "linux", "flameshot")["stdout"]
+    assert pick(True, "linux") is None
+    print("selftest ok")
 
 
 def check_deps():
@@ -58,9 +169,10 @@ def check_deps():
             status["details"]["gh"] = "Installed and authenticated."
 
     # 2. Screenshot capabilities
-    has_screencapture = bool(shutil.which("screencapture"))
-    status["details"]["screencapture"] = "Available (macOS)" if has_screencapture else "Unavailable (paste a screenshot instead)"
-    
+    plan = capture_plan(True)
+    status["details"]["capture"] = (f"Drag-select via {plan['name']}" if plan
+                                    else "No screenshot tool found. Paste a screenshot instead. " + install_hint())
+
     # 3. Screens directory
     os.makedirs(SHOTS, exist_ok=True)
     status["details"]["screens_dir"] = f"Ready: {SHOTS}"
@@ -75,7 +187,7 @@ def last_recent_shot(max_age_seconds=180):
     now = time.time()
     candidates = []
     for f in os.listdir(SHOTS):
-        if f.startswith("astrohuh-") and f.endswith((".png", ".jpg", ".jpeg", ".webp")):
+        if f.startswith(PREFIX) and f.endswith((".png", ".jpg", ".jpeg", ".webp")):
             full = os.path.join(SHOTS, f)
             mtime = os.path.getmtime(full)
             if now - mtime <= max_age_seconds:
@@ -90,10 +202,10 @@ def last_pasted_image():
     """Extract last pasted base64 image from session transcripts if available."""
     sid = os.environ.get("CLAUDE_CODE_SESSION_ID")
     if sid:
-        for path in glob.glob(os.path.expanduser(f"~/.claude/projects/*/{sid}.jsonl")):
+        for path in glob.glob(os.path.join(os.path.expanduser("~"), ".claude", "projects", "*", f"{sid}.jsonl")):
             found = None
             try:
-                with open(path) as f:
+                with open(path, encoding="utf-8") as f:
                     for line in f:
                         if '"image"' not in line:
                             continue
@@ -133,36 +245,20 @@ def grab(screen=False, crop=False):
     os.makedirs(SHOTS, exist_ok=True)
     stamp = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H%M%SZ")
 
-    # 1. If explicit --screen requested, run full-screen capture
+    # 1. Explicit --screen: full-screen capture
     if screen:
-        out = os.path.join(SHOTS, f"astrohuh-{stamp}.png")
-        if shutil.which("screencapture"):
-            subprocess.run(["screencapture", "-x", out], check=True)
-            print(out)
-            return
-        else:
-            raise SystemExit("screencapture is not available on this platform for --screen")
+        return capture_to(os.path.join(SHOTS, f"{PREFIX}{stamp}.png"), crop=False)
 
-    # 2. If explicit --crop requested, run interactive drag-select crosshair
+    # 2. Explicit --crop: interactive drag-select
     if crop:
-        out = os.path.join(SHOTS, f"astrohuh-{stamp}.png")
+        out = os.path.join(SHOTS, f"{PREFIX}{stamp}.png")
         fixture = os.environ.get("ASTROHUH_TEST_FIXTURE")
         if fixture:
             # tests stand in for the drag-select so nothing pops over the live screen
             shutil.copyfile(fixture, out)
             print(out)
             return
-        if shutil.which("screencapture"):
-            r = subprocess.run(["screencapture", "-i", "-s", "-x", out])
-            if r.returncode == 0 and os.path.exists(out) and os.path.getsize(out) > 0:
-                print(out)
-                return
-            else:
-                if os.path.exists(out) and os.path.getsize(out) == 0:
-                    os.remove(out)
-                raise SystemExit("Interactive capture cancelled or empty.")
-        else:
-            raise SystemExit("screencapture is not available on this platform for --crop")
+        return capture_to(out, crop=True)
 
     # 3. No flags: check recent shot (within 180s)
     recent = last_recent_shot(max_age_seconds=180)
@@ -177,7 +273,7 @@ def grab(screen=False, crop=False):
             print(img["file_path"])
             return
         ext = img.get("media_type", "image/png").split("/")[-1].replace("jpeg", "jpg")
-        out = os.path.join(SHOTS, f"astrohuh-{stamp}.{ext}")
+        out = os.path.join(SHOTS, f"{PREFIX}{stamp}.{ext}")
         with open(out, "wb") as f:
             f.write(base64.b64decode(img["data"]))
         print(out)
@@ -256,6 +352,8 @@ if __name__ == "__main__":
         res = check_deps()
         print(json.dumps(res, indent=2))
         sys.exit(0 if res["ready"] else 1)
+    elif args[0] == "selftest":
+        selftest()
     elif args[0] == "grab":
         grab(screen="--screen" in args, crop="--crop" in args)
     elif args[0] == "file" and len(args) >= 5:
