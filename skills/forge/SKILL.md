@@ -12,10 +12,10 @@ A forged skill carries the **method**, never the content. See "What never goes i
 
 ## 1. Skim
 
-Run the reading step in this skill's own folder (under Claude Code, `${CLAUDE_PLUGIN_ROOT}/skim.mjs`):
+Run the reading step, `skim.mjs`, which sits beside this page (under Claude Code, `${CLAUDE_PLUGIN_ROOT}/skim.mjs`). Give its full path; it runs from any folder:
 
 ```
-node skim.mjs <dashboard address> --skip <this chat's tab id>
+node <this skill's folder>/skim.mjs <dashboard address> --skip <this chat's tab id>
 ```
 
 The dashboard address and this chat's tab id are the ones your session was given. It prints each open chat's title, the member's own messages, and the opening of each reply. Their messages are where the repeated asks and the corrections are, so read those closest.
