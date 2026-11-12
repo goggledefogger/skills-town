@@ -33,7 +33,7 @@ Look for the bigger repeatable ideas, not one-off tasks. Signs of one:
 
 One chat can hold several. No fixed list of kinds: judge what is worth repeating for this person. Before offering, list the names and descriptions of the skills they already have (`.agents/skills/` in the brain, and the session's own skill list). When one already does the job, offer to improve that one instead of making a twin.
 
-Name the whole way of working, not one move inside it: several moves in the same chats that serve one purpose (preparing, rehearsing and revising the same piece of work) are one idea. A fix, a lookup or a decision made once is a task, not a way of working; leave it out.
+Name the whole way of working, not one move inside it: several moves in the same chats that serve one purpose (preparing, rehearsing and revising the same piece of work) are one idea. A fix, a lookup or a decision made once is a task, not a way of working; leave it out. Do not stretch a one-off into a kind of work to fill a slot: something that happened once, in one chat, with nothing saying it will come round again, stays out, and you offer 2 or 1.
 
 When a chat that looks promising was cut short in the digest, read it with `--tab` before offering.
 
