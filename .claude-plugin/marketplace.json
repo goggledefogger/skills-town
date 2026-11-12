@@ -69,6 +69,13 @@
       "version": "1.3.0",
       "license": "MIT",
       "description": "Something in Astrolabe made you go huh? Point at it, and AstroHuh drafts a GitHub issue for Dan and Danny to read, with one approval to file."
+    },
+    {
+      "name": "skill-forge",
+      "source": "./skills/skill-forge",
+      "version": "1.0.0",
+      "license": "MIT",
+      "description": "Turn something you keep doing by hand into a skill with its own button. Skill Forge skims your open Astrolabe chats, offers about 3 ideas, and makes the one you pick."
     }
   ]
 }

@@ -1,0 +1,9 @@
+{
+  "name": "skill-forge",
+  "description": "Turn something you keep doing by hand into a skill with its own button. Skill Forge skims your open Astrolabe chats, offers about 3 ideas, and makes the one you pick.",
+  "author": {
+    "name": "goggledefogger"
+  },
+  "license": "MIT",
+  "version": "1.0.0"
+}
