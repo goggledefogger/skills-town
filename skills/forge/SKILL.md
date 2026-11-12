@@ -108,7 +108,7 @@ The chats are private. The skill and its card hold how the work is done, and non
 - no names of people, companies or clients, no contact details, no figures, dates or places from the chats
 - no text of their documents, slides, messages or notes, even as an example; write a made-up example instead
 - no file paths from their machine; say "the deck" or "the outline they name", and let the skill ask or look at run time
-- their preferences about the work ("keyword bullets, not sentences") are method and belong in
+- their preferences about the work ("keyword bullets, not sentences") are method, so those go in the skill
 
 Read the finished skill once against this list before saving.
 
