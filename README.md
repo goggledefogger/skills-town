@@ -54,7 +54,7 @@ Or add as a Claude Code plugin marketplace:
 | [walkthrough-video](skills/walkthrough-video/) | Make a captioned how-to video of any web app from one script: it records the real screens and adds title cards and captions. Re-run it after the app changes for a fresh video. |
 | [scrappy-video-understanding](skills/scrappy-video-understanding/) | Scrappy multi-pass video understanding: takes any video link or file, grabs keyframes and contact sheets, pulls audio/subtitles, and explains what happened. |
 | [astrohuh](skills/astrohuh/) | Something in Astrolabe made you go huh? Point at it, and AstroHuh drafts a GitHub issue for Dan and Danny to read, with one approval to file. |
-| [forge](skills/forge/) | Turn something you keep doing by hand into a skill with its own button. Forge skims your open Astrolabe chats, offers about 3 ideas, and makes the one you pick. |
+| [skill-forge](skills/skill-forge/) | Turn something you keep doing by hand into a skill with its own button. Skill Forge skims your open Astrolabe chats, offers about 3 ideas, and makes the one you pick. |
 
 ## The audit gate
 

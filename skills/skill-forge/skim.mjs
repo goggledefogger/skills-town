@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Forge's reading step: a cheap digest of the open Astrolabe chats.
+// Skill Forge's reading step: a cheap digest of the open Astrolabe chats.
 //   node skim.mjs [dashboard-url] [--skip <tab id>]   every open chat, the member's own words first
 //   node skim.mjs [dashboard-url] --tab <tab id>      one chat, its recent turns in full
 //   node skim.mjs --self-test

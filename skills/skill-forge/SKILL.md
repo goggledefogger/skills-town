@@ -1,10 +1,10 @@
 ---
-name: forge
-description: Turn something the member keeps doing by hand into a skill with its own button. Skims the open Astrolabe chats for repeatable ways of working, offers about 3, looks closer at the one they pick, writes the skill and pins its button to their shelf. Use when the member presses the Forge card, types /forge, or says "forge a skill", "make this a skill", "turn this into a button", or "what in my chats could be a skill".
+name: skill-forge
+description: Turn something the member keeps doing by hand into a skill with its own button. Skims the open Astrolabe chats for repeatable ways of working, offers about 3, looks closer at the one they pick, writes the skill and pins its button to their shelf. Use when the member presses the Skill Forge card, types /skill-forge, or says "forge a skill", "make this a skill", "turn this into a button", or "what in my chats could be a skill".
 allowed-tools: [Read, Write, Bash]
 ---
 
-# Forge
+# Skill Forge
 
 The member has been working something out by hand across their chats. Find the ways of working worth repeating, let them pick one, and end with a finished button on their shelf. One press, one question, one button. Not a draft, not an interview.
 
@@ -20,7 +20,7 @@ node <this skill's folder>/skim.mjs <dashboard address> --skip <this chat's tab 
 
 The dashboard address and this chat's tab id are the ones your session was given. It prints each open chat's title, the member's own messages, and the opening of each reply. Their messages are where the repeated asks and the corrections are, so read those closest.
 
-If the member pointed at something (words after `/forge`, "the deck chat", "the thing we just did"), skip to step 3 with that. If the step fails or this is not Astrolabe, work from this conversation alone and say so in one line.
+If the member pointed at something (words after `/skill-forge`, "the deck chat", "the thing we just did"), skip to step 3 with that. If the step fails or this is not Astrolabe, work from this conversation alone and say so in one line.
 
 ## 2. Offer about 3
 
@@ -112,8 +112,8 @@ The chats are private. The skill and its card hold how the work is done, and non
 
 Read the finished skill once against this list before saving.
 
-Everything Forge makes stays in the member's brain. Sharing a forged skill with other people is a separate step they ask for, never part of a press.
+Everything Skill Forge makes stays in the member's brain. Sharing a forged skill with other people is a separate step they ask for, never part of a press.
 
 ## Requirements
 
-Astrolabe, for the open chats and the shelf. Node, which Astrolabe already runs on. Without Astrolabe, Forge works from the current conversation and writes the skill wherever this assistant keeps skills; there is no button.
+Astrolabe, for the open chats and the shelf. Node, which Astrolabe already runs on. Without Astrolabe, Skill Forge works from the current conversation and writes the skill wherever this assistant keeps skills; there is no button.
