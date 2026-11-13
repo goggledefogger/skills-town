@@ -8,7 +8,19 @@
 const MEMBER_CLIP = 400;   // the member's messages carry the repeated asks, so they get the room
 const REPLY_CLIP = 120;    // a reply's opening is enough to tell what was made
 const TAB_CAP = 7000;      // ponytail: flat cap per chat; 3000 cut most long chats and hid ideas (2026-11-11)
-const MIN_MEMBER_TURNS = 3;
+const MIN_MEMBER_TURNS = 1;   // a 2-message chat can still hold a way of working (2026-11-13)
+const CONTEXT_OPEN = '(About this chat: ';   // the dashboard's per-turn envelope, not the member's words
+
+// strips the dashboard's leading "(About this chat: ...)" envelopes; they can nest parentheses
+export function ownWords(text) {
+  let s = String(text || '').trimStart();
+  while (s.startsWith(CONTEXT_OPEN)) {
+    let depth = 0, i = 0;
+    for (; i < s.length; i++) { if (s[i] === '(') depth++; else if (s[i] === ')' && --depth === 0) break; }
+    s = s.slice(i + 1).trimStart();
+  }
+  return s;
+}
 
 const clip = (s, n) => {
   const one = String(s || '').replace(/\s+/g, ' ').trim();
@@ -19,7 +31,7 @@ export function digest(tab, turns) {
   const mine = turns.filter((t) => t.role === 'user');
   if (mine.length < MIN_MEMBER_TURNS) return '';
   const lines = turns.map((t) => (t.role === 'user'
-    ? '- member: ' + clip(t.text, MEMBER_CLIP)
+    ? '- member: ' + clip(ownWords(t.text), MEMBER_CLIP)
     : '  reply: ' + clip(t.text, REPLY_CLIP)));
   let body = lines.join('\n');
   if (body.length > TAB_CAP) body = body.slice(0, TAB_CAP) + '\n  (cut here; read this chat with --tab for the rest)';
@@ -44,7 +56,7 @@ async function main(argv) {
     const tab = tabs.find((t) => t.id === one) || { id: one, title: '' };
     const { turns = [] } = await get(base, '/api/history?tab=' + encodeURIComponent(one));
     console.log(`# ${tab.title || one}\n`);
-    for (const t of turns) console.log(`### ${t.role === 'user' ? 'member' : 'reply'}\n${String(t.text || '').trim()}\n`);
+    for (const t of turns) console.log(`### ${t.role === 'user' ? 'member' : 'reply'}\n${(t.role === 'user' ? ownWords(t.text) : String(t.text || '')).trim()}\n`);
     return;
   }
 
@@ -59,14 +71,16 @@ async function main(argv) {
     if (d) { console.log(d); shown += 1; } else thin.push(tab.title || tab.id);
   }
   console.log(`${shown} chats shown of ${tabs.length} open.`);
-  if (thin.length) console.log('Too short to skim, or unreadable: ' + thin.join('; '));
+  if (thin.length) console.log('Nothing from the member yet, or unreadable: ' + thin.join('; '));
 }
 
 function selfTest() {
   const assert = (ok, what) => { if (!ok) { console.error('FAIL: ' + what); process.exit(1); } };
   const turn = (role, text) => ({ role, text });
   const tab = { id: 't1', title: 'Deck' };
-  assert(digest(tab, [turn('user', 'a'), turn('assistant', 'b')]) === '', 'a chat with under 3 member messages is skipped');
+  assert(digest(tab, [turn('assistant', 'b')]) === '', 'a chat with no member messages is skipped');
+  assert(digest(tab, [turn('user', 'a'), turn('user', 'b')]).includes('2 member messages'), 'a 2-message chat is shown');
+  assert(ownWords(CONTEXT_OPEN + 'repo x (cd into it).) build the thing') === 'build the thing', 'the chat envelope is stripped, nested parens and all');
   const d = digest(tab, [turn('user', 'one\n two'), turn('assistant', 'x'.repeat(500)), turn('user', 'three'), turn('user', 'four')]);
   assert(d.startsWith('## Deck (tab t1, 3 member messages)'), 'the heading names the chat and counts member messages');
   assert(d.includes('- member: one two'), 'member text is flattened to one line');
