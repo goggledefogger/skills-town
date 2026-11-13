@@ -1,5 +1,8 @@
 # What changed
 
+## 1.2.0
+Skill Forge now reads short chats too, ignores the note the dashboard adds to each message so it sees what you actually asked, and names each idea's chats by their tab titles.
+
 ## 1.1.0
 Before writing a skill, Skill Forge now always plays back what the button would do and waits for you to confirm or correct it.
 

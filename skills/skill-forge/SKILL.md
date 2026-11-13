@@ -37,7 +37,7 @@ Name the whole way of working, not one move inside it: several moves in the same
 
 When a chat that looks promising was cut short in the digest, read it with `--tab` before offering.
 
-Show about 3, the one they are likeliest to use again first, each as a name and one plain line that says what the button would do and the chat or chats it came from (chat titles are fine here). Fewer than 3 is fine; never pad the list, and when unsure whether something is a way of working or a one-off, leave it out. Then ask once which to make. They may pick one, name another, or point at a chat.
+Show about 3, the one they are likeliest to use again first, each as a name and one plain line that says what the button would do and the chat or chats it came from, each by its tab title in quotes ("Deck Review", "Trip Plan") so they can find it. Fewer than 3 is fine; never pad the list, and when unsure whether something is a way of working or a one-off, leave it out. Then ask once which to make. They may pick one, name another, or point at a chat.
 
 ## 3. Look closer
 
