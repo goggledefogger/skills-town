@@ -6,7 +6,7 @@ allowed-tools: [Read, Write, Bash]
 
 # Skill Forge
 
-The member has been working something out by hand across their chats. Find the ways of working worth repeating, let them pick one, and end with a finished button on their shelf. One press, one question, one button. Not a draft, not an interview.
+The member has been working something out by hand across their chats. Find the ways of working worth repeating, let them pick one, and end with a finished button on their shelf. One press, a pick, one check that you heard it right, one button. Not a draft, not an interview.
 
 A forged skill carries the **method**, never the content. See "What never goes in" before writing anything.
 
@@ -55,7 +55,9 @@ Pull out the method:
 - every correction they made, as a rule ("one line per idea", not the story of the mistake)
 - what done looks like, and what they do with the result
 
-Keep it general across the kind of work. A skill forged from one talk should serve the next talk. If something essential is missing and cannot be reasonably assumed, ask one question; otherwise decide and say what you assumed in the closing line.
+Keep it general across the kind of work. A skill forged from one talk should serve the next talk.
+
+Before writing anything, check you read it right, every time. A chat can hold several ideas, and the one the member means may not be the one you would pick. Say in 2 or 3 plain lines what the button would do when pressed: what starts it, what it does, what it ends with. If the chat holds more than one possible skill, name each in a line and say which you lean to. Ask once whether that is what they want, then wait. Write only after they confirm or correct it; if they correct it, play the new reading back once more in a line.
 
 ## 4. Write the skill
 
@@ -97,7 +99,7 @@ The phrase is what a press types into a chat, so the skill's description must na
 
 ## 6. Say what you made
 
-In 3 lines or fewer: the button's name and what a press does, what you assumed, and that "undo that" removes it. Show the skill itself in a card if it is short, otherwise its path. Do not run the new skill; pressing the button is theirs.
+In 3 lines or fewer: the button's name and what a press does, what you settled on together, and that "undo that" removes it. Show the skill itself in a card if it is short, otherwise its path. Do not run the new skill; pressing the button is theirs.
 
 Undo means: remove the card from `.dashboard-rituals.json` and delete `.agents/skills/<id>/`. Nothing else was touched.
 
