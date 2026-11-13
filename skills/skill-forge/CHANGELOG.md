@@ -1,6 +1,6 @@
 # What changed
 
-## Unreleased
+## 1.1.0
 Before writing a skill, Skill Forge now always plays back what the button would do and waits for you to confirm or correct it.
 
 ## 1.0.0
